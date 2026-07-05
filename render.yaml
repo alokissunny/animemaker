@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: anime-maker-server
+    runtime: node
+    rootDir: app/server
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: OPENAI_TEXT_MODEL
+        value: gpt-4o-mini
+      - key: GEMINI_IMAGE_MODEL
+        value: gemini-2.5-flash-image
+      - key: VEO_MODEL
+        value: veo-3.0-generate-001
+
+  - type: web
+    name: anime-maker-client
+    runtime: static
+    rootDir: app/client
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      # Set this to the anime-maker-server URL Render assigns (e.g.
+      # https://anime-maker-server.onrender.com), then trigger a redeploy —
+      # Vite bakes this in at build time, it can't be changed at runtime.
+      - key: VITE_API_BASE_URL
+        sync: false
