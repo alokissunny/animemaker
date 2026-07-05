@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+    @keyframes pulseGlow { 0%,100% { opacity: 0.55; } 50% { opacity: 1; } }
+    @keyframes floatBlob { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(20px,-30px) scale(1.05); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #0A0A12; }
+    ::selection { background: #8B5CF6; color: #fff; }
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-thumb { background: #2A283C; border-radius: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+  </style>
+</helmet>
+
+<div style="min-height:100vh; width:100%; background:#0A0A12; font-family:'Manrope',sans-serif; color:#F5F4FA; position:relative; overflow-x:hidden;">
+
+  <!-- ambient background blobs -->
+  <div style="position:fixed; top:-10%; left:-10%; width:500px; height:500px; border-radius:50%; background:radial-gradient(circle,rgba(139,92,246,0.20),transparent 70%); filter:blur(20px); animation: floatBlob 14s ease-in-out infinite; pointer-events:none; z-index:0;"></div>
+  <div style="position:fixed; bottom:-10%; right:-5%; width:600px; height:600px; border-radius:50%; background:radial-gradient(circle,rgba(236,72,153,0.16),transparent 70%); filter:blur(20px); animation: floatBlob 18s ease-in-out infinite reverse; pointer-events:none; z-index:0;"></div>
+
+  <sc-if value="{{ showTopNav }}" hint-placeholder-val="{{ true }}">
+    <div style="position:sticky; top:0; z-index:20; backdrop-filter:blur(16px); background:rgba(10,10,18,0.72); border-bottom:1px solid rgba(255,255,255,0.07);">
+      <div style="max-width:1240px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; justify-content:space-between; gap:14px;">
+        <div style="display:flex; align-items:center; gap:9px; cursor:pointer; flex-shrink:0;" onClick="{{ goDashboard }}">
+          <div style="width:30px; height:30px; border-radius:9px; background:linear-gradient(135deg,#8B5CF6,#EC4899); display:flex; align-items:center; justify-content:center; font-family:'Sora',sans-serif; font-weight:800; font-size:14px; box-shadow:0 0 20px rgba(139,92,246,0.5); flex-shrink:0;">N</div>
+          <div style="font-family:'Sora',sans-serif; font-weight:700; font-size:15px; letter-spacing:0.2px; white-space:nowrap;">Nova</div>
+        </div>
+        <sc-if value="{{ showStepper }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex; align-items:center; gap:2px; flex:1; justify-content:center; min-width:0; overflow-x:auto; padding:2px 0;">
+            <sc-for list="{{ stepList }}" as="step" hint-placeholder-count="7">
+              <div style="display:flex; align-items:center; gap:5px; cursor:{{ step.clickable }}; opacity:{{ step.opacity }}; flex-shrink:0;" onClick="{{ step.onClick }}">
+                <div style="width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; font-family:'Sora',sans-serif; background:{{ step.bg }}; color:{{ step.color }}; border:{{ step.border }}; box-shadow:{{ step.glow }}; flex-shrink:0;">{{ step.badge }}</div>
+                <div style="font-size:10.5px; font-weight:600; color:{{ step.textColor }}; white-space:nowrap;">{{ step.label }}</div>
+                <sc-if value="{{ step.showConnector }}" hint-placeholder-val="{{ true }}">
+                  <div style="width:10px; height:1.5px; background:{{ step.connectorColor }}; margin:0 1px; flex-shrink:0;"></div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+        <div style="display:flex; align-items:center; gap:14px; flex-shrink:0;">
+          <sc-if value="{{ isLoggedInNav }}" hint-placeholder-val="{{ false }}">
+            <div style="width:30px; height:30px; border-radius:50%; background:linear-gradient(135deg,#4F8CFF,#8B5CF6); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; font-family:'Sora',sans-serif; flex-shrink:0;">MT</div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="position:relative; z-index:1;">
+    <sc-if value="{{ isLanding }}" hint-placeholder-val="{{ true }}">
+      <div data-screen-label="Landing">
+        <!-- LANDING -->
+        <div style="max-width:1120px; margin:0 auto; padding:96px 32px 64px; text-align:center;">
+          <div style="display:inline-flex; align-items:center; gap:8px; padding:7px 16px; border-radius:999px; background:rgba(139,92,246,0.12); border:1px solid rgba(139,92,246,0.35); font-size:12.5px; font-weight:600; color:#C4B5FD; margin-bottom:28px;">
+            <span style="width:6px; height:6px; border-radius:50%; background:#8B5CF6; animation: pulseGlow 2s infinite;"></span>
+            AI-powered anime production, end to end
+          </div>
+          <h1 style="font-family:'Sora',sans-serif; font-weight:800; font-size:60px; line-height:1.08; margin:0 0 22px; letter-spacing:-1.5px; background:linear-gradient(135deg,#F5F4FA 40%,#C4B5FD 70%,#F5A8D0 100%); -webkit-background-clip:text; background-clip:text; color:transparent;">
+            Bring your characters<br/>to life in anime.
+          </h1>
+          <p style="font-size:18px; line-height:1.6; color:#9C99B4; max-width:600px; margin:0 auto 40px;">Design your cast, spin up a story, and render a finished anime episode &mdash; no animation skills required.</p>
+          <div style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap;">
+            <button onClick="{{ goLogin }}" style="border:none; cursor:pointer; padding:16px 32px; border-radius:14px; background:linear-gradient(135deg,#8B5CF6,#EC4899); color:#fff; font-family:'Sora',sans-serif; font-weight:700; font-size:15.5px; box-shadow:0 8px 30px rgba(139,92,246,0.4);">Create your anime cast &rarr;</button>
+            <button onClick="{{ goLogin }}" style="cursor:pointer; padding:16px 28px; border-radius:14px; background:rgba(255,255,255,0.05); color:#F5F4FA; font-family:'Sora',sans-serif; font-weight:600; font-size:15.5px; border:1px solid rgba(255,255,255,0.12);">See how it works</button>
+          </div>
+        </div>
+        <div style="max-width:1120px; margin:0 auto 100px; padding:0 32px; display:grid; grid-template-columns:repeat(3,1fr); gap:20px;">
+          <sc-for list="{{ landingFeatures }}" as="f" hint-placeholder-count="3">
+            <div style="background:linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01)); border:1px solid rgba(255,255,255,0.08); border-radius:20px; padding:26px;">
+              <div style="width:42px; height:42px; border-radius:12px; background:{{ f.bg }}; display:flex; align-items:center; justify-content:center; font-size:19px; margin-bottom:16px;">{{ f.icon }}</div>
+              <div style="font-family:'Sora',sans-serif; font-weight:700; font-size:16px; margin-bottom:8px;">{{ f.title }}</div>
+              <div style="font-size:13.5px; color:#9C99B4; line-height:1.6;">{{ f.desc }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isLogin }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Login" style="min-height:80vh; display:flex; align-items:center; justify-content:center; padding:40px 20px;">
+        <div style="width:100%; max-width:400px; background:linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.015)); border:1px solid rgba(255,255,255,0.09); border-radius:22px; padding:36px;">
+          <div style="display:flex; gap:8px; margin-bottom:28px; background:rgba(255,255,255,0.04); border-radius:12px; padding:4px;">
+            <button onClick="{{ setAuthTabLogin }}" style="flex:1; border:none; cursor:pointer; padding:10px; border-radius:9px; font-family:'Sora',sans-serif; font-weight:700; font-size:13.5px; background:{{ authTabLoginBg }}; color:{{ authTabLoginColor }};">Log in</button>
+            <button onClick="{{ setAuthTabSignup }}" style="flex:1; border:none; cursor:pointer; padding:10px; border-radius:9px; font-family:'Sora',sans-serif; font-weight:700; font-size:13.5px; background:{{ authTabSignupBg }}; color:{{ authTabSignupColor }};">Sign up</button>
+          </div>
+          <div style="font-family:'Sora',sans-serif; font-weight:700; font-size:20px; margin-bottom:6px;">{{ authHeadline }}</div>
+          <div style="font-size:13px; color:#9C99B4; margin-bottom:24px;">{{ authSubline }}</div>
+          <div style="display:flex; flex-direction:column; gap:14px;">
+            <div>
+              <div style="font-size:12px; font-weight:600; color:#9C99B4; margin-bottom:6px;">Email</div>
+              <input type="email" placeholder="you@studio.com" style="width:100%; padding:12px 14px; border-radius:10px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); color:#F5F4FA; font-size:14px; font-family:'Manrope',sans-serif;" />
+            </div>
+            <div>
+              <div style="font-size:12px; font-weight:600; color:#9C99B4; margin-bottom:6px;">Password</div>
+              <input type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" style="width:100%; padding:12px 14px; border-radius:10px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); color:#F5F4FA; font-size:14px; font-family:'Manrope',sans-serif;" />
+            </div>
+            <button onClick="{{ goDashboard }}" style="margin-top:6px; border:none; cursor:pointer; padding:13px; border-radius:11px; background:linear-gradient(135deg,#8B5CF6,#EC4899); color:#fff; font-family:'Sora',sans-serif; font-weight:700; font-size:14.5px; box-shadow:0 8px 24px rgba(139,92,246,0.35);">{{ authCta }}</button>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isDashboard }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Dashboard" style="max-width:1200px; margin:0 auto; padding:40px 32px 80px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:32px; flex-wrap:wrap; gap:16px;">
+          <div>
+            <div style="font-family:'Sora',sans-serif; font-weight:800; font-size:28px; margin-bottom:4px;">Welcome back, Maya</div>
+            <div style="font-size:14px; color:#9C99B4;">Pick up a project or start a brand-new anime episode.</div>
+          </div>
+          <button onClick="{{ startNewEpisode }}" style="border:none; cursor:pointer; padding:14px 24px; border-radius:13px; background:linear-gradient(135deg,#8B5CF6,#EC4899); color:#fff; font-family:'Sora',sans-serif; font-weight:700; font-size:14.5px; box-shadow:0 8px 26px rgba(139,92,246,0.4); display:flex; align-items:center; gap:8px;">
+            <span style="font-size:17px; line-height:1;">+</span> Create New Anime Episode
+          </button>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:20px;">
+          <sc-for list="{{ projects }}" as="p" hint-placeholder-count="4">
+            <div onClick="{{ p.onOpen }}" style="cursor:pointer; background:linear-gradient(180deg,rgba(255,255,255,0.045),rgba(255,255,255,0.015)); border:1px solid rgba(255,255,255,0.08); border-radius:18px; overflow:hidden; transition:transform 0.15s;" style-hover="transform:translateY(-3px); border-color:rgba(139,92,246,0.4);">
+              <div style="height:150px; background:{{ p.thumbGradient }}; position:relative; display:flex; align-items:center; justify-content:center;">
+                <div style="font-family:'Sora',sans-serif; font-weight:800; font-size:34px; color:rgba(255,255,255,0.85);">{{ p.initials }}</div>
+                <div style="position:absolute; top:10px; right:10px; padding:5px 10px; border-radius:999px; font-size:10.5px; font-weight:700; font-family:'Sora',sans-serif; background:{{ p.statusBg }}; color:{{ p.statusColor }};">{{ p.statusLabel }}</div>
+              </div>
+              <div style="padding:16px 18px 18px;">
+                <div style="font-family:'Sora',sans-serif; font-weight:700; font-size:15px; margin-bottom:4px;">{{ p.title }}</div>
+                <div style="font-size:12.5px; color:#9C99B4; margin-bottom:10px;">{{ p.meta }}</div>
+                <div style="height:5px; border-radius:3px; background:rgba(255,255,255,0.07); overflow:hidden;">
+                  <div style="height:100%; width:{{ p.progressPct }}; background:linear-gradient(90deg,#8B5CF6,#EC4899); border-radius:3px;"></div>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isProjectDetail }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Project Detail" style="max-width:800px; margin:0 auto; padding:60px 32px 80px;">
+        <button onClick="{{ goDashboard }}" style="border:none; background:none; cursor:pointer; color:#9C99B4; font-size:13px; font-weight:600; margin-bottom:24px; display:flex; align-items:center; gap:6px; font-family:'Manrope',sans-serif;">&larr; Back to dashboard</button>
+        <div style="background:linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.015)); border:1px solid rgba(255,255,255,0.09); border-radius:22px; padding:36px;">
+          <div style="display:flex; align-items:center; gap:16px; margin-bottom:20px;">
+            <div style="width:64px; height:64px; border-radius:16px; background:{{ selectedProject.thumbGradient }}; display:flex; align-items:center; justify-content:center; font-family:'Sora',sans-serif; font-weight:800; font-size:22px;">{{ selectedProject.initials }}</div>
+            <div>
+              <div style="font-family:'Sora',sans-serif; font-weight:700; font-size:22px;">{{ selectedProject.title }}</div>
+              <div style="font-size:13px; color:#9C99B4;">{{ selectedProject.meta }}</div>
+            </div>
+          </div>
+          <div style="padding:14px 16px; border-radius:12px; background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.3); font-size:13.5px; color:#C4B5FD; margin-bottom:24px;">Status: {{ selectedProject.statusLabel }} &mdash; pick up right where you left off.</div>
+          <button onClick="{{ resumeProject }}" style="border:none; cursor:pointer; padding:14px 26px; border-radius:13px; background:linear-gradient(135deg,#8B5CF6,#EC4899); color:#fff; font-family:'Sora',sans-serif; font-weight:700; font-size:14.5px;">Resume project &rarr;</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isCharacters }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Character Creation" style="max-width:1240px; margin:0 auto; padding:32px 32px 90px;">
+        <div style="margin-bottom:28px;">
+          <div style="font-family:'Sora',sans-serif; font-weight:800; font-size:26px; margin-bottom:6px;">Create your anime cast</div>
+          <div style="font-size:14px; color:#9C99B4;">Design each character, then finalize your cast before moving on.</div>
+        </div>
+
+        <div style="display:flex; gap:8px; margin-bottom:26px; background:rgba(255,255,255,0.04); border-radius:12px; padding:4px; width:fit-content;">
+          <button onClick="{{ setCharTabCreate }}" style="border:none; cursor:pointer; padding:10px 20px; border-radius:9px; font-family:'Sora',sans-serif; font-weight:700; font-size:13.5px; background:{{ charTabCreateBg }}; color:{{ charTabCreateColor }};">Create character</button>
+          <button onClick="{{ setCharTabGallery }}" style="border:none; cursor:pointer; padding:10px 20px; border-radius:9px; font-family:'Sora',sans-serif; font-weight:700; font-size:13.5px; background:{{ charTabGalleryBg }}; color:{{ charTabGalleryColor }};">My cast ({{ characters.length }})</button>
+        </div>
+
+        <sc-if value="{{ charTabIsCreate }}" hint-placeholder-val="{{ true }}">
+          <div style="display:grid; grid-template-columns:1.15fr 0.85fr; gap:24px; align-items:start;">
+            <div style="background:linear-gradient(180deg,rgba(255,255,255,0.045),rgba(255,255,255,0.015)); border:1px solid rgba(255,255,255,0.08); border-radius:20px; padding:28px;">
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <div style="grid-column:1/-1;">
+                  <div style="font-size:12px; font-weight:600; color:#9C99B4; margin-bottom:6px;">Character name</div>
+                  <input value="{{ draft.name }}" onChange="{{ setDraftName }}" placeholder="e.g. Momo" style="width:100%; padding:12px 14px; border-radius:10px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); color:#F5F4FA; font-size:14px; font-family:'Manrope',sans-serif;" />
+                </div>
+                <div>
+                  <div style="font-size:12px; font-weight:600; color:#9C99B4; margin-bottom:6px;">Age group</div>
+                  <select value="{{ draft.ageGroup }}" onChange="{{ setDraftAgeGroup }}" style="width:100%; padding:12px 14px; border-radius:10px; background:#14131F; border:1px solid rgba(255,255,255,0.1); color:#F5F4FA; font-size:14px; font-family:'Manrope',sans-serif;">
+                    <sc-for list="{{ ageGroupOptions }}" as="o" hint-placeholder-count="4"><option value="{{ o }}">{{ o }}</option></sc-for>
+                  </select>
+                </div>
+                <div>
+                  <div style="font-size:12px; font-weight:600; color:#9C99B4; margin-bottom:6px;">Gender</div>
+                  <select value="{{ draft.gender }}" onChange="{{ setDraftGender }}" style="width:100%; padding:12px 14px; border-radius:10px; background:#14131F; border:1px solid rgba(255,255,255,0.1); color:#F5F4FA; font-size:14px; font-family:'Manrope',sans-serif;">
+                    <sc-for list="{{ genderOptions }}" as="o" hint-placeholder-count="3"><option value="{{ o }}">{{ o }}</option></sc-for>
+                  </select>
+                </div>
+                <div>
+                  <div style="font-size:12px; font-weight:600; color:#9C99B4; margin-bottom:6px;">Personality</div>
+                  <select value="{{ draft.personality }}" onChange="{{ setDraftPersonality }}" style="width:100%; padding:12px 14px; border-radius:10px; background:#14131F; border:1px solid rgba(255,255,255,0.1); color:#F5F4FA; font-size:14px; font-family:'Manrope',sans-serif;">
+                    <sc-for list="{{ personalityOptions }}" as="o" hint-placeholder-count="6"><option value="{{ o }}">{{ o }}</option></sc-for>
+                  </select>
+                </div>
+                <div>
+                  <div style="font-size:12px; font-weight:600; color:#9C99B4; margin-bottom:6px;">Anime style</div>
+                  <select value="{{ draft.animeStyle }}" onChange="{{ setDraftAnimeStyle }}" style="width:100%; padding:12px 14px; border-radius:10px; background:#14131F; border:1px solid rgba(255,255,255,0.1); color:#F5F4FA; font-size:14px; font-family:'Manrope',sans-serif;">
+                    <sc-for list="{{ animeStyleOptions }}" as="o" hint-placeholder-count="4"><option value="{{ o }}">{{ o }}</option></sc-for>
+                  </select>
+                </div>
+                <div>
+                  <div style="font-size:12px; font-weight:600; color:#9C99B4; margin-bottom:6px;">Hair style</div>
+                  <select value="{{ draft.hairStyle }}" onChange="{{ setDraftHairStyle }}" style="width:100%; padding:12px 14px; border-radius:10px; background:#14131F; border:1px solid rgba(255,255,255,0.1); color:#F5F4FA; font-size:14px; font-family:'Manrope',sans-serif;">
+                    <sc-for list="{{ hairStyleOptions }}" as="o" hint-placeholder-count="5"><option value="{{ o }}">{{ o }}</option></sc-for>
+                  </select>
+                </div>
+                <div>
+                  <div style="font-size:12px; font-weight:600; color:#9C99B4; margin-bottom:6px;">Hair color</div>
+                  <div style="display:flex; gap:8px; flex-wrap:wrap; padding-top:4px;">
+                    <sc-for list="{{ hairColorOptions }}" as="c" hint-placeholder-count="6">
+                      <div onClick="{{ c.onClick }}" style="width:28px; height:28px; border-radius:50%; background:{{ c.hex }}; cursor:pointer; border:{{ c.border }}; box-shadow:{{ c.glow }};"></div>
+                    </sc-for>
+                  </div>
+                </div>
+                <div>
+                  <div style="font-size:12px; font-weight:600; color:#9C99B4; margin-bottom:6px;">Eye color</div>
+                  <div style="display:flex; gap:8px; flex-wrap:wrap; padding-top:4px;">
+                    <sc-for list="{{ eyeColorOptions }}" as="c" hint-placeholder-count="6">
+                      <div onClick="{{ c.onClick }}" style="width:28px; height:28px; border-radius:50%; background:{{ c.hex }}; cursor:pointer; border:{{ c.border }}; box-shadow:{{ c.glow }};"></div>
+                    </sc-for>
+                  </div>
+                </div>
+                <div>
+                  <div style="font-size:12px; font-weight:600; color:#9C99B4; margin-bottom:6px;">Outfit style</div>
+                  <select value="{{ draft.outfitStyle }}" onChange="{{ setDraftOutfitStyle }}" style="width:100%; padding:12px 14px; border-radius:10px; background:#14131F; border:1px solid rgba(255,255,255,0.1); color:#F5F4FA; font-size:14px; font-family:'Manrope',sans-serif;">
+                    <sc-for list="{{ outfitStyleOptions }}" as="o" hint-placeholder-count="5"><option value="{{ o }}">{{ o }}</option></sc-for>
+                  </select>
+                </div>
+                <div style="grid-column:1/-1;">
+                  <div style="font-size:12px; font-weight:600; color:#9C99B4; margin-bottom:6px;">Role in story</div>
+                  <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <sc-for list="{{ roleOptions }}" as="r" hint-placeholder-count="5">
+                      <button onClick="{{ r.onClick }}" style="border:{{ r.border }}; cursor:pointer; padding:9px 16px; border-radius:999px; font-size:12.5px; font-weight:700; font-family:'Sora',sans-serif; background:{{ r.bg }}; color:{{ r.color }};">{{ r.label }}</button>
+                    </sc-for>
+                  </div>
+                </div>
+                <div style="grid-column:1/-1;">
+                  <div style="font-size:12px; font-weight:600; color:#9C99B4; margin-bottom:6px;">Character description prompt</div>
+                  <textarea value="{{ draft.prompt }}" onChange="{{ setDraftPrompt }}" placeholder="A cheerful piglet who loves puddles and never stops giggling..." rows="3" style="width:100%; padding:12px 14px; border-radius:10px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); color:#F5F4FA; font-size:13.5px; font-family:'Manrope',sans-serif; resize:vertical;"></textarea>
+                </div>
+              </div>
+              <div style="display:flex; gap:12px; margin-top:22px;">
+                <button onClick="{{ generateCharacter }}" style="flex:1; border:none; cursor:pointer; padding:14px; border-radius:12px; background:linear-gradient(135deg,#8B5CF6,#EC4899); color:#fff; font-family:'Sora',sans-serif; font-weight:700; font-size:14.5px; box-shadow:0 8px 24px rgba(139,92,246,0.35);">{{ generateBtnLabel }}</button>
+                <sc-if value="{{ hasPreview }}" hint-placeholder-val="{{ false }}">
+                  <button onClick="{{ regenerateCharacter }}" style="border:1px solid rgba(255,255,255,0.14); cursor:pointer; padding:14px 20px; border-radius:12px; background:rgba(255,255,255,0.05); color:#F5F4FA; font-family:'Sora',sans-serif; font-weight:700; font-size:14px;">Regenerate</button>
+                </sc-if>
+              </div>
+            </div>
+
+            <div style="position:sticky; top:96px;">
+              <div style="background:linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.015)); border:1px solid rgba(255,255,255,0.08); border-radius:20px; padding:22px; text-align:center;">
+                <div style="font-size:11.5px; font-weight:700; color:#9C99B4; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:14px;">AI character preview</div>
+                <div style="width:100%; aspect-ratio:3/4; border-radius:16px; background:{{ previewGradient }}; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; margin-bottom:16px;">
+                  <sc-if value="{{ isGeneratingChar }}" hint-placeholder-val="{{ false }}">
+                    <div style="position:absolute; inset:0; background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,0.18) 50%,transparent 70%); background-size:200% 100%; animation: shimmer 1.4s infinite;"></div>
+                    <div style="font-family:'Sora',sans-serif; font-weight:700; font-size:13px; color:#fff;">Generating character&hellip;</div>
+                  </sc-if>
+                  <sc-if value="{{ hasPreview }}" hint-placeholder-val="{{ false }}">
+                    <div style="font-family:'Sora',sans-serif; font-weight:800; font-size:52px; color:rgba(255,255,255,0.9); text-shadow:0 4px 24px rgba(0,0,0,0.3);">{{ previewInitial }}</div>
+                  </sc-if>
+                  <sc-if value="{{ showEmptyPreview }}" hint-placeholder-val="{{ true }}">
+                    <div style="font-size:13px; color:rgba(255,255,255,0.6); padding:0 20px;">Fill in the details and generate to preview your character</div>
+                  </sc-if>
+                </div>
+                <div style="font-family:'Sora',sans-serif; font-weight:700; font-size:15px; margin-bottom:2px;">{{ draft.name }}</div>
+                <div style="font-size:12px; color:#9C99B4; margin-bottom:18px;">{{ previewSubline }}</div>
+                <button onClick="{{ saveCharacter }}" disabled="{{ saveDisabled }}" style="width:100%; border:none; cursor:pointer; padding:13px; border-radius:11px; background:{{ saveBtnBg }}; color:{{ saveBtnColor }}; font-family:'Sora',sans-serif; font-weight:700; font-size:14px;">Save character</button>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ charTabIsGallery }}" hint-placeholder-val="{{ false }}">
+          <sc-if value="{{ hasCharacters }}" hint-placeholder-val="{{ false }}">
+            <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:18px; margin-bottom:32px;">
+              <sc-for list="{{ characters }}" as="ch" hint-placeholder-count="3">
+                <div style="background:linear-gradient(180deg,rgba(255,255,255,0.045),rgba(255,255,255,0.015)); border:1px solid rgba(255,255,255,0.08); border-radius:18px; overflow:hidden;">
+                  <div style="height:150px; background:{{ ch.gradient }}; display:flex; align-items:center; justify-content:center; position:relative;">
+                    <div style="font-family:'Sora',sans-serif; font-weight:800; font-size:38px; color:rgba(255,255,255,0.9);">{{ ch.initial }}</div>
+                    <div style="position:absolute; top:9px; right:9px; padding:4px 10px; border-radius:999px; font-size:10px; font-weight:700; font-family:'Sora',sans-serif; background:rgba(52,211,153,0.2); color:#6EE7B7;">Finalized</div>
+                  </div>
+                  <div style="padding:14px 16px 16px;">
+                    <div style="font-family:'Sora',sans-serif; font-weight:700; font-size:14.5px; margin-bottom:2px;">{{ ch.name }}</div>
+                    <div style="font-size:11.5px; color:#9C99B4;">{{ ch.role }} &middot; {{ ch.animeStyle }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+            <button onClick="{{ continueToEpisodeSetup }}" style="border:none; cursor:pointer; padding:15px 30px; border-radius:13px; background:linear-gradient(135deg,#8B5CF6,#EC4899); color:#fff; font-family:'Sora',sans-serif; font-weight:700; font-size:15px; box-shadow:0 8px 26px rgba(139,92,246,0.4);">Continue to Episode Setup &rarr;</button>
+          </sc-if>
+          <sc-if value="{{ hasNoCharacters }}" hint-placeholder-val="{{ true }}">
+            <div style="text-align:center; padding:70px 20px; border:1px dashed rgba(255,255,255,0.15); border-radius:18px;">
+              <div style="font-size:15px; color:#9C99B4; margin-bottom:16px;">No finalized characters yet.</div>
+              <button onClick="{{ setCharTabCreate }}" style="border:none; cursor:pointer; padding:12px 22px; border-radius:11px; background:linear-gradient(135deg,#8B5CF6,#EC4899); color:#fff; font-family:'Sora',sans-serif; font-weight:700; font-size:13.5px;">Create your first character</button>
+            </div>
+          </sc-if>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isEpisodeSetup }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Episode Setup" style="max-width:920px; margin:0 auto; padding:32px 32px 90px;">
+        <div style="margin-bottom:28px;">
+          <div style="font-family:'Sora',sans-serif; font-weight:800; font-size:26px; margin-bottom:6px;">Choose your episode theme</div>
+          <div style="font-size:14px; color:#9C99B4;">Set the shape of your episode before the AI writes the story.</div>
+        </div>
+
+        <div style="background:linear-gradient(180deg,rgba(255,255,255,0.045),rgba(255,255,255,0.015)); border:1px solid rgba(255,255,255,0.08); border-radius:20px; padding:28px; display:flex; flex-direction:column; gap:24px;">
+
+          <div>
+            <div style="font-size:12.5px; font-weight:700; color:#9C99B4; margin-bottom:10px;">Episode theme</div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <sc-for list="{{ themeOptions }}" as="t" hint-placeholder-count="10">
+                <button onClick="{{ t.onClick }}" style="border:{{ t.border }}; cursor:pointer; padding:10px 16px; border-radius:12px; font-size:13px; font-weight:700; font-family:'Sora',sans-serif; background:{{ t.bg }}; color:{{ t.color }};">{{ t.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size:12.5px; font-weight:700; color:#9C99B4; margin-bottom:10px;">Episode duration</div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <sc-for list="{{ durationOptions }}" as="d" hint-placeholder-count="5">
+                <button onClick="{{ d.onClick }}" style="border:{{ d.border }}; cursor:pointer; padding:10px 16px; border-radius:12px; font-size:13px; font-weight:700; font-family:'Sora',sans-serif; background:{{ d.bg }}; color:{{ d.color }};">{{ d.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+            <div>
+              <div style="font-size:12.5px; font-weight:700; color:#9C99B4; margin-bottom:8px;">Target audience</div>
+              <select value="{{ episodeConfig.audience }}" onChange="{{ setAudience }}" style="width:100%; padding:12px 14px; border-radius:10px; background:#14131F; border:1px solid rgba(255,255,255,0.1); color:#F5F4FA; font-size:14px; font-family:'Manrope',sans-serif;">
+                <sc-for list="{{ audienceOptions }}" as="o" hint-placeholder-count="4"><option value="{{ o }}">{{ o }}</option></sc-for>
+              </select>
+            </div>
+            <div>
+              <div style="font-size:12.5px; font-weight:700; color:#9C99B4; margin-bottom:8px;">Story mood</div>
+              <select value="{{ episodeConfig.mood }}" onChange="{{ setMood }}" style="width:100%; padding:12px 14px; border-radius:10px; background:#14131F; border:1px solid rgba(255,255,255,0.1); color:#F5F4FA; font-size:14px; font-family:'Manrope',sans-serif;">
+                <sc-for list="{{ moodOptions }}" as="o" hint-placeholder-count="5"><option value="{{ o }}">{{ o }}</option></sc-for>
+              </select>
+            </div>
+            <div>
+              <div style="font-size:12.5px; font-weight:700; color:#9C99B4; margin-bottom:8px;">Visual style</div>
+              <select value="{{ episodeConfig.visualStyle }}" onChange="{{ setVisualStyle }}" style="width:100%; padding:12px 14px; border-radius:10px; background:#14131F; border:1px solid rgba(255,255,255,0.1); color:#F5F4FA; font-size:14px; font-family:'Manrope',sans-serif;">
+                <sc-for list="{{ visualStyleOptions }}" as="o" hint-placeholder-count="4"><option value="{{ o }}">{{ o }}</option></sc-for>
+              </select>
+            </div>
+            <div>
+              <div style="font-size:12.5px; font-weight:700; color:#9C99B4; margin-bottom:8px;">Language</div>
+              <select value="{{ episodeConfig.language }}" onChange="{{ setLanguage }}" style="width:100%; padding:12px 14px; border-radius:10px; background:#14131F; border:1px solid rgba(255,255,255,0.1); color:#F5F4FA; font-size:14px; font-family:'Manrope',sans-serif;">
+                <sc-for list="{{ languageOptions }}" as="o" hint-placeholder-count="5"><option value="{{ o }}">{{ o }}</option></sc-for>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-size:12.5px; font-weight:700; color:#9C99B4; margin-bottom:10px;">Number of scenes: {{ episodeConfig.numScenes }}</div>
+            <input type="range" min="3" max="8" value="{{ episodeConfig.numScenes }}" onChange="{{ setNumScenes }}" style="width:100%; accent-color:#8B5CF6;" />
+          </div>
+
+          <div>
+            <div style="font-size:12.5px; font-weight:700; color:#9C99B4; margin-bottom:8px;">Describe your episode idea</div>
+            <textarea value="{{ episodeConfig.idea }}" onChange="{{ setIdea }}" rows="3" placeholder="Momo gets caught in the rain on the way home and discovers something magical in a puddle..." style="width:100%; padding:12px 14px; border-radius:10px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); color:#F5F4FA; font-size:13.5px; font-family:'Manrope',sans-serif; resize:vertical;"></textarea>
+          </div>
+
+          <button onClick="{{ generateStory }}" style="border:none; cursor:pointer; padding:15px; border-radius:13px; background:linear-gradient(135deg,#8B5CF6,#EC4899); color:#fff; font-family:'Sora',sans-serif; font-weight:700; font-size:15px; box-shadow:0 8px 26px rgba(139,92,246,0.4);">Generate story &rarr;</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isStory }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Story Generation" style="max-width:880px; margin:0 auto; padding:32px 32px 90px;">
+        <div style="margin-bottom:24px;">
+          <div style="font-family:'Sora',sans-serif; font-weight:800; font-size:26px; margin-bottom:6px;">Your episode story</div>
+          <div style="font-size:14px; color:#9C99B4;">Generated by Nova's story model from your characters, theme, and idea.</div>
+        </div>
+
+        <sc-if value="{{ isGeneratingStory }}" hint-placeholder-val="{{ true }}">
+          <div style="background:linear-gradient(180deg,rgba(255,255,255,0.045),rgba(255,255,255,0.015)); border:1px solid rgba(255,255,255,0.08); border-radius:20px; padding:60px 28px; text-align:center;">
+            <div style="width:48px; height:48px; border-radius:50%; border:3px solid rgba(139,92,246,0.25); border-top-color:#8B5CF6; margin:0 auto 20px; animation: spin 0.9s linear infinite;"></div>
+            <div style="font-family:'Sora',sans-serif; font-weight:700; font-size:15px; margin-bottom:6px;">Writing your story&hellip;</div>
+            <div style="font-size:13px; color:#9C99B4;">Story generation model is drafting a {{ episodeConfig.theme }} episode for {{ episodeConfig.duration }}.</div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isStoryReady }}" hint-placeholder-val="{{ false }}">
+          <div style="background:linear-gradient(180deg,rgba(255,255,255,0.045),rgba(255,255,255,0.015)); border:1px solid rgba(255,255,255,0.08); border-radius:20px; padding:30px;">
+            <div style="display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:999px; background:rgba(139,92,246,0.15); font-size:11px; font-weight:700; color:#C4B5FD; margin-bottom:14px;">STORY MODEL OUTPUT</div>
+            <div style="font-family:'Sora',sans-serif; font-weight:800; font-size:24px; margin-bottom:10px;">{{ story.title }}</div>
+            <div style="font-size:14px; color:#C9C6DA; font-style:italic; margin-bottom:20px; line-height:1.6;">{{ story.synopsis }}</div>
+
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px;">
+              <sc-for list="{{ story.roleChips }}" as="rc" hint-placeholder-count="3">
+                <div style="padding:6px 12px; border-radius:999px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); font-size:12px; font-weight:600;">{{ rc.name }} <span style="color:#9C99B4;">&middot; {{ rc.role }}</span></div>
+              </sc-for>
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:22px;">
+              <div style="background:rgba(255,255,255,0.03); border-radius:14px; padding:16px;">
+                <div style="font-size:11px; font-weight:700; color:#8B5CF6; margin-bottom:6px;">BEGINNING</div>
+                <div style="font-size:13px; color:#C9C6DA; line-height:1.55;">{{ story.beginning }}</div>
+              </div>
+              <div style="background:rgba(255,255,255,0.03); border-radius:14px; padding:16px;">
+                <div style="font-size:11px; font-weight:700; color:#EC4899; margin-bottom:6px;">MIDDLE</div>
+                <div style="font-size:13px; color:#C9C6DA; line-height:1.55;">{{ story.middle }}</div>
+              </div>
+              <div style="background:rgba(255,255,255,0.03); border-radius:14px; padding:16px;">
+                <div style="font-size:11px; font-weight:700; color:#4F8CFF; margin-bottom:6px;">ENDING</div>
+                <div style="font-size:13px; color:#C9C6DA; line-height:1.55;">{{ story.ending }}</div>
+              </div>
+            </div>
+
+            <div style="margin-bottom:8px; font-size:12px; font-weight:700; color:#9C99B4;">FULL STORY</div>
+            <sc-if value="{{ isEditingStory }}" hint-placeholder-val="{{ false }}">
+              <textarea value="{{ story.full }}" onChange="{{ setStoryFull }}" rows="8" style="width:100%; padding:14px; border-radius:12px; background:rgba(255,255,255,0.04); border:1px solid rgba(139,92,246,0.4); color:#F5F4FA; font-size:13.5px; font-family:'Manrope',sans-serif; line-height:1.7; resize:vertical;"></textarea>
+            </sc-if>
+            <sc-if value="{{ isEditingStory }}" hint-placeholder-val="{{ false }}" >
+            </sc-if>
+            <sc-if value="{{ notEditingStory }}" hint-placeholder-val="{{ true }}">
+              <div style="font-size:13.5px; color:#DAD8E8; line-height:1.75; white-space:pre-line;">{{ story.full }}</div>
+            </sc-if>
+
+            <div style="display:flex; gap:12px; margin-top:26px; flex-wrap:wrap;">
+              <button onClick="{{ approveStory }}" style="border:none; cursor:pointer; padding:14px 24px; border-radius:12px; background:linear-gradient(135deg,#34D399,#10B981); color:#06251A; font-family:'Sora',sans-serif; font-weight:700; font-size:14px;">&#10003; Approve story</button>
+              <button onClick="{{ regenerateStory }}" style="border:1px solid rgba(255,255,255,0.14); cursor:pointer; padding:14px 22px; border-radius:12px; background:rgba(255,255,255,0.05); color:#F5F4FA; font-family:'Sora',sans-serif; font-weight:700; font-size:14px;">Regenerate story</button>
+              <button onClick="{{ toggleEditStory }}" style="border:1px solid rgba(255,255,255,0.14); cursor:pointer; padding:14px 22px; border-radius:12px; background:rgba(255,255,255,0.05); color:#F5F4FA; font-family:'Sora',sans-serif; font-weight:700; font-size:14px;">{{ editStoryLabel }}</button>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isScenes }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Scene Breakdown" style="max-width:1080px; margin:0 auto; padding:32px 32px 90px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px;">
+          <div>
+            <div style="font-family:'Sora',sans-serif; font-weight:800; font-size:26px; margin-bottom:6px;">Scene-by-scene breakdown</div>
+            <div style="font-size:14px; color:#9C99B4;">Approve each scene &mdash; the scene breakdown model builds prompts, captions, and camera direction.</div>
+          </div>
+          <div style="font-size:13px; font-weight:700; color:#C4B5FD; background:rgba(139,92,246,0.12); padding:8px 14px; border-radius:999px;">{{ scenesApprovedCount }} / {{ scenes.length }} approved</div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:18px;">
+          <sc-for list="{{ scenes }}" as="sc_" hint-placeholder-count="5">
+            <div style="background:linear-gradient(180deg,rgba(255,255,255,0.045),rgba(255,255,255,0.015)); border:1px solid {{ sc_.borderColor }}; border-radius:18px; padding:24px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                  <div style="width:32px; height:32px; border-radius:9px; background:rgba(139,92,246,0.18); color:#C4B5FD; display:flex; align-items:center; justify-content:center; font-family:'Sora',sans-serif; font-weight:800; font-size:14px;">{{ sc_.number }}</div>
+                  <div style="font-family:'Sora',sans-serif; font-weight:700; font-size:16px;">{{ sc_.title }}</div>
+                </div>
+                <div style="padding:5px 12px; border-radius:999px; font-size:10.5px; font-weight:700; font-family:'Sora',sans-serif; background:{{ sc_.statusBg }}; color:{{ sc_.statusColor }};">{{ sc_.statusLabel }}</div>
+              </div>
+
+              <div style="font-size:13.5px; color:#DAD8E8; line-height:1.6; margin-bottom:16px;">{{ sc_.description }}</div>
+
+              <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:16px;">
+                <div style="background:rgba(255,255,255,0.03); border-radius:10px; padding:10px 12px;">
+                  <div style="font-size:10px; font-weight:700; color:#6B6880; margin-bottom:3px;">CHARACTERS</div>
+                  <div style="font-size:12px; color:#C9C6DA;">{{ sc_.charactersInvolved }}</div>
+                </div>
+                <div style="background:rgba(255,255,255,0.03); border-radius:10px; padding:10px 12px;">
+                  <div style="font-size:10px; font-weight:700; color:#6B6880; margin-bottom:3px;">LOCATION</div>
+                  <div style="font-size:12px; color:#C9C6DA;">{{ sc_.location }}</div>
+                </div>
+                <div style="background:rgba(255,255,255,0.03); border-radius:10px; padding:10px 12px;">
+                  <div style="font-size:10px; font-weight:700; color:#6B6880; margin-bottom:3px;">CAMERA ANGLE</div>
+                  <div style="font-size:12px; color:#C9C6DA;">{{ sc_.camera }}</div>
+                </div>
+                <div style="background:rgba(255,255,255,0.03); border-radius:10px; padding:10px 12px;">
+                  <div style="font-size:10px; font-weight:700; color:#6B6880; margin-bottom:3px;">MOOD</div>
+                  <div style="font-size:12px; color:#C9C6DA;">{{ sc_.mood }}</div>
+                </div>
+              </div>
+
+              <div style="background:rgba(255,255,255,0.03); border-radius:10px; padding:12px 14px; margin-bottom:10px;">
+                <div style="font-size:10px; font-weight:700; color:#6B6880; margin-bottom:4px;">ACTION</div>
+                <div style="font-size:12.5px; color:#C9C6DA; line-height:1.5;">{{ sc_.action }}</div>
+              </div>
+              <div style="background:rgba(139,92,246,0.08); border:1px solid rgba(139,92,246,0.2); border-radius:10px; padding:12px 14px; margin-bottom:16px;">
+                <div style="font-size:10px; font-weight:700; color:#C4B5FD; margin-bottom:4px;">CAPTION / DIALOGUE</div>
+                <div style="font-size:13px; color:#F0EEFA; font-style:italic; line-height:1.5;">&ldquo;{{ sc_.caption }}&rdquo;</div>
+              </div>
+
+              <div style="display:flex; gap:12px;">
+                <button onClick="{{ sc_.onApprove }}" style="border:none; cursor:pointer; padding:11px 18px; border-radius:10px; background:{{ sc_.approveBg }}; color:{{ sc_.approveColor }}; font-family:'Sora',sans-serif; font-weight:700; font-size:12.5px;">{{ sc_.approveLabel }}</button>
+                <button onClick="{{ sc_.onRegenerate }}" style="border:1px solid rgba(255,255,255,0.14); cursor:pointer; padding:11px 16px; border-radius:10px; background:rgba(255,255,255,0.05); color:#F5F4FA; font-family:'Sora',sans-serif; font-weight:700; font-size:12.5px;">Regenerate scene</button>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{ allScenesApproved }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:28px; text-align:center;">
+            <button onClick="{{ goToImages }}" style="border:none; cursor:pointer; padding:16px 32px; border-radius:14px; background:linear-gradient(135deg,#8B5CF6,#EC4899); color:#fff; font-family:'Sora',sans-serif; font-weight:700; font-size:15.5px; box-shadow:0 8px 30px rgba(139,92,246,0.4);">Generate Scene Images &rarr;</button>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isImages }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Scene Image Generation" style="max-width:1080px; margin:0 auto; padding:32px 32px 90px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px;">
+          <div>
+            <div style="font-family:'Sora',sans-serif; font-weight:800; font-size:26px; margin-bottom:6px;">Create scene images</div>
+            <div style="font-size:14px; color:#9C99B4;">The image generation model renders each approved scene. Pick your favorite take.</div>
+          </div>
+          <div style="font-size:13px; font-weight:700; color:#C4B5FD; background:rgba(139,92,246,0.12); padding:8px 14px; border-radius:999px;">{{ imagesApprovedCount }} / {{ scenes.length }} approved</div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:18px;">
+          <sc-for list="{{ imageScenes }}" as="im" hint-placeholder-count="5">
+            <div style="background:linear-gradient(180deg,rgba(255,255,255,0.045),rgba(255,255,255,0.015)); border:1px solid {{ im.borderColor }}; border-radius:18px; padding:22px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+                <div style="font-family:'Sora',sans-serif; font-weight:700; font-size:15px;">Scene {{ im.number }} &middot; {{ im.title }}</div>
+                <div style="padding:5px 12px; border-radius:999px; font-size:10.5px; font-weight:700; font-family:'Sora',sans-serif; background:{{ im.statusBg }}; color:{{ im.statusColor }};">{{ im.statusLabel }}</div>
+              </div>
+              <div style="font-size:11.5px; color:#8A87A0; margin-bottom:14px;">Prompt: <span style="color:#C9C6DA;">{{ im.prompt }}</span> &middot; Characters: {{ im.charactersInvolved }}</div>
+
+              <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:16px;">
+                <sc-for list="{{ im.variants }}" as="v" hint-placeholder-count="4">
+                  <div onClick="{{ v.onSelect }}" style="cursor:pointer; border-radius:12px; overflow:hidden; border:{{ v.border }}; position:relative;">
+                    <div style="aspect-ratio:1; background:{{ v.gradient }}; display:flex; align-items:center; justify-content:center; position:relative;">
+                      <sc-if value="{{ im.isGenerating }}" hint-placeholder-val="{{ false }}">
+                        <div style="position:absolute; inset:0; background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,0.18) 50%,transparent 70%); background-size:200% 100%; animation: shimmer 1.4s infinite;"></div>
+                      </sc-if>
+                      <sc-if value="{{ v.isSelected }}" hint-placeholder-val="{{ false }}">
+                        <div style="position:absolute; top:6px; right:6px; width:20px; height:20px; border-radius:50%; background:#34D399; color:#06251A; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800;">&#10003;</div>
+                      </sc-if>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+
+              <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                <button onClick="{{ im.onApprove }}" style="border:none; cursor:pointer; padding:11px 18px; border-radius:10px; background:{{ im.approveBg }}; color:{{ im.approveColor }}; font-family:'Sora',sans-serif; font-weight:700; font-size:12.5px;">{{ im.approveLabel }}</button>
+                <button onClick="{{ im.onRegenerate }}" style="border:1px solid rgba(255,255,255,0.14); cursor:pointer; padding:11px 16px; border-radius:10px; background:rgba(255,255,255,0.05); color:#F5F4FA; font-family:'Sora',sans-serif; font-weight:700; font-size:12.5px;">Regenerate</button>
+                <button style="border:1px solid rgba(255,255,255,0.14); cursor:pointer; padding:11px 16px; border-radius:10px; background:rgba(255,255,255,0.05); color:#F5F4FA; font-family:'Sora',sans-serif; font-weight:700; font-size:12.5px;">Edit prompt</button>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{ allImagesApproved }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:28px; text-align:center;">
+            <button onClick="{{ goToVideos }}" style="border:none; cursor:pointer; padding:16px 32px; border-radius:14px; background:linear-gradient(135deg,#8B5CF6,#EC4899); color:#fff; font-family:'Sora',sans-serif; font-weight:700; font-size:15.5px; box-shadow:0 8px 30px rgba(139,92,246,0.4);">Turn images into anime video &rarr;</button>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isVideos }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Scene Video Generation" style="max-width:1080px; margin:0 auto; padding:32px 32px 90px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px;">
+          <div>
+            <div style="font-family:'Sora',sans-serif; font-weight:800; font-size:26px; margin-bottom:6px;">Generate scene videos</div>
+            <div style="font-size:14px; color:#9C99B4;">The video model animates each approved image into a short motion clip.</div>
+          </div>
+          <div style="font-size:13px; font-weight:700; color:#C4B5FD; background:rgba(139,92,246,0.12); padding:8px 14px; border-radius:999px;">{{ videosApprovedCount }} / {{ scenes.length }} approved</div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <sc-for list="{{ videoScenes }}" as="vd" hint-placeholder-count="5">
+            <div style="background:linear-gradient(180deg,rgba(255,255,255,0.045),rgba(255,255,255,0.015)); border:1px solid {{ vd.borderColor }}; border-radius:18px; padding:20px; display:grid; grid-template-columns:200px 1fr; gap:20px;">
+              <div style="aspect-ratio:1; border-radius:14px; background:{{ vd.gradient }}; position:relative; display:flex; align-items:center; justify-content:center;">
+                <sc-if value="{{ vd.isGenerating }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute; inset:0; background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,0.18) 50%,transparent 70%); background-size:200% 100%; animation: shimmer 1.4s infinite; border-radius:14px;"></div>
+                  <div style="width:34px; height:34px; border-radius:50%; border:3px solid rgba(255,255,255,0.3); border-top-color:#fff; animation: spin 0.9s linear infinite;"></div>
+                </sc-if>
+                <sc-if value="{{ vd.isReady }}" hint-placeholder-val="{{ false }}">
+                  <div style="width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,0.25); display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+                    <div style="width:0; height:0; border-top:9px solid transparent; border-bottom:9px solid transparent; border-left:14px solid #fff; margin-left:3px;"></div>
+                  </div>
+                </sc-if>
+              </div>
+              <div>
+                <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:10px;">
+                  <div style="font-family:'Sora',sans-serif; font-weight:700; font-size:15px; line-height:1.35;">Scene {{ vd.number }} &middot; {{ vd.title }}</div>
+                  <div style="flex-shrink:0; padding:5px 12px; border-radius:999px; font-size:10.5px; font-weight:700; font-family:'Sora',sans-serif; background:{{ vd.statusBg }}; color:{{ vd.statusColor }};">{{ vd.statusLabel }}</div>
+                </div>
+                <div style="font-size:11.5px; color:#8A87A0; margin-bottom:8px; line-height:1.5;">Duration: {{ vd.duration }} &middot; Motion prompt: <span style="color:#C9C6DA;">{{ vd.motionPrompt }}</span></div>
+                <div style="font-size:12.5px; color:#DAD8E8; font-style:italic; margin-bottom:14px;">&ldquo;{{ vd.caption }}&rdquo;</div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                  <button onClick="{{ vd.onApprove }}" style="border:none; cursor:pointer; padding:10px 16px; border-radius:10px; background:{{ vd.approveBg }}; color:{{ vd.approveColor }}; font-family:'Sora',sans-serif; font-weight:700; font-size:12px;">{{ vd.approveLabel }}</button>
+                  <button onClick="{{ vd.onRegenerate }}" style="border:1px solid rgba(255,255,255,0.14); cursor:pointer; padding:10px 14px; border-radius:10px; background:rgba(255,255,255,0.05); color:#F5F4FA; font-family:'Sora',sans-serif; font-weight:700; font-size:12px;">Regenerate video</button>
+                  <button style="border:1px solid rgba(255,255,255,0.14); cursor:pointer; padding:10px 14px; border-radius:10px; background:rgba(255,255,255,0.05); color:#F5F4FA; font-family:'Sora',sans-serif; font-weight:700; font-size:12px;">Edit motion prompt</button>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{ allVideosApproved }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:28px; text-align:center;">
+            <button onClick="{{ goToFinal }}" style="border:none; cursor:pointer; padding:16px 32px; border-radius:14px; background:linear-gradient(135deg,#8B5CF6,#EC4899); color:#fff; font-family:'Sora',sans-serif; font-weight:700; font-size:15.5px; box-shadow:0 8px 30px rgba(139,92,246,0.4);">Create Final Episode &rarr;</button>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isFinal }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Final Episode Preview" style="max-width:1000px; margin:0 auto; padding:32px 32px 90px;">
+        <div style="text-align:center; margin-bottom:28px;">
+          <div style="display:inline-flex; align-items:center; gap:8px; padding:7px 16px; border-radius:999px; background:rgba(52,211,153,0.14); border:1px solid rgba(52,211,153,0.35); font-size:12.5px; font-weight:700; color:#6EE7B7; margin-bottom:16px;">&#10003; Your episode is ready</div>
+          <div style="font-family:'Sora',sans-serif; font-weight:800; font-size:28px;">{{ story.title }}</div>
+        </div>
+
+        <div style="background:#000; border-radius:20px; overflow:hidden; border:1px solid rgba(255,255,255,0.08); margin-bottom:22px;">
+          <div style="aspect-ratio:16/9; background:linear-gradient(135deg,#3B2E6B,#6B3E7A,#2E4B6B); display:flex; align-items:center; justify-content:center; position:relative;">
+            <div style="width:64px; height:64px; border-radius:50%; background:rgba(255,255,255,0.22); display:flex; align-items:center; justify-content:center; backdrop-filter:blur(6px); cursor:pointer;">
+              <div style="width:0; height:0; border-top:12px solid transparent; border-bottom:12px solid transparent; border-left:19px solid #fff; margin-left:4px;"></div>
+            </div>
+            <sc-if value="{{ finalConfig.captionsOn }}" hint-placeholder-val="{{ true }}">
+              <div style="position:absolute; bottom:22px; left:0; right:0; text-align:center; font-size:13.5px; font-weight:600; color:#fff; text-shadow:0 2px 8px rgba(0,0,0,0.6); padding:0 20px;">&ldquo;{{ scenes[0].caption }}&rdquo;</div>
+            </sc-if>
+          </div>
+          <div style="display:flex; gap:4px; padding:10px; background:#0A0A12;">
+            <sc-for list="{{ scenes }}" as="tl" hint-placeholder-count="5">
+              <div style="flex:1; height:34px; border-radius:6px; background:{{ tl.gradient }};"></div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:26px;">
+          <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:18px; display:flex; align-items:center; justify-content:space-between;">
+            <div>
+              <div style="font-family:'Sora',sans-serif; font-weight:700; font-size:14px; margin-bottom:2px;">Captions</div>
+              <div style="font-size:12px; color:#9C99B4;">Show dialogue burned into the video</div>
+            </div>
+            <div onClick="{{ toggleCaptions }}" style="width:44px; height:25px; border-radius:999px; background:{{ captionsToggleBg }}; position:relative; cursor:pointer;">
+              <div style="position:absolute; top:2.5px; left:{{ captionsKnobLeft }}; width:20px; height:20px; border-radius:50%; background:#fff; transition:left 0.15s;"></div>
+            </div>
+          </div>
+          <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:18px;">
+            <div style="font-family:'Sora',sans-serif; font-weight:700; font-size:14px; margin-bottom:8px;">Background music</div>
+            <select value="{{ finalConfig.music }}" onChange="{{ setMusic }}" style="width:100%; padding:9px 12px; border-radius:9px; background:#14131F; border:1px solid rgba(255,255,255,0.1); color:#F5F4FA; font-size:13px; font-family:'Manrope',sans-serif;">
+              <sc-for list="{{ musicOptions }}" as="o" hint-placeholder-count="4"><option value="{{ o }}">{{ o }}</option></sc-for>
+            </select>
+          </div>
+        </div>
+
+        <div style="background:linear-gradient(180deg,rgba(255,255,255,0.045),rgba(255,255,255,0.015)); border:1px solid rgba(255,255,255,0.08); border-radius:18px; padding:22px;">
+          <div style="font-family:'Sora',sans-serif; font-weight:700; font-size:15px; margin-bottom:14px;">Export settings</div>
+          <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:20px;">
+            <sc-for list="{{ exportFormatOptions }}" as="ef" hint-placeholder-count="5">
+              <button onClick="{{ ef.onClick }}" style="border:{{ ef.border }}; cursor:pointer; padding:12px 8px; border-radius:12px; font-size:11.5px; font-weight:700; font-family:'Sora',sans-serif; background:{{ ef.bg }}; color:{{ ef.color }}; text-align:center;">{{ ef.label }}</button>
+            </sc-for>
+          </div>
+          <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <button style="flex:1; min-width:160px; border:none; cursor:pointer; padding:15px; border-radius:13px; background:linear-gradient(135deg,#8B5CF6,#EC4899); color:#fff; font-family:'Sora',sans-serif; font-weight:700; font-size:14.5px; box-shadow:0 8px 26px rgba(139,92,246,0.4);">Export episode</button>
+            <button style="flex:1; min-width:160px; border:1px solid rgba(255,255,255,0.14); cursor:pointer; padding:15px; border-radius:13px; background:rgba(255,255,255,0.05); color:#F5F4FA; font-family:'Sora',sans-serif; font-weight:700; font-size:14.5px;">Download</button>
+            <button style="flex:1; min-width:160px; border:1px solid rgba(255,255,255,0.14); cursor:pointer; padding:15px; border-radius:13px; background:rgba(255,255,255,0.05); color:#F5F4FA; font-family:'Sora',sans-serif; font-weight:700; font-size:14.5px;">Share</button>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <div id="flow-anchor"></div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    screen: 'landing',
+    authTab: 'login',
+    charTab: 'create',
+    characters: [],
+    draft: this.blankDraft(),
+    isGeneratingChar: false,
+    hasPreview: false,
+    episodeConfig: {
+      theme: 'Friendship', duration: '1 minute', audience: 'Kids (5-9)', mood: 'Wholesome',
+      visualStyle: 'Soft pastel anime', language: 'English', numScenes: 5, idea: '',
+    },
+    isGeneratingStory: false,
+    isStoryReady: false,
+    isEditingStory: false,
+    story: null,
+    scenes: [],
+    images: {},
+    videos: {},
+    finalConfig: { captionsOn: true, music: 'Warm acoustic (default)', format: 'YouTube Shorts' },
+  };
+
+  blankDraft() {
+    return {
+      name: '', ageGroup: 'Kid (5-9)', gender: 'Girl', personality: 'Cheerful',
+      animeStyle: 'Chibi / Cute', hairStyle: 'Twin tails', hairColor: '#E85D9E',
+      eyeColor: '#4F8CFF', outfitStyle: 'Everyday casual', role: 'Hero', prompt: '',
+    };
+  }
+
+  goLanding = () => this.setState({ screen: 'landing' });
+  goLogin = () => this.setState({ screen: 'login' });
+  goDashboard = () => this.setState({ screen: 'dashboard' });
+  setAuthTabLogin = () => this.setState({ authTab: 'login' });
+  setAuthTabSignup = () => this.setState({ authTab: 'signup' });
+
+  startNewEpisode = () => this.setState({ screen: 'characters' });
+
+  openProject = (p) => this.setState({ screen: 'projectDetail', selectedProjectId: p.id });
+
+  setCharTabCreate = () => this.setState({ charTab: 'create' });
+  setCharTabGallery = () => this.setState({ charTab: 'gallery' });
+  setDraftField = (field) => (e) => {
+    const val = e && e.target ? e.target.value : e;
+    this.setState(s => ({ draft: { ...s.draft, [field]: val } }));
+  };
+  setDraftColorField = (field, hex) => () => {
+    this.setState(s => ({ draft: { ...s.draft, [field]: hex } }));
+  };
+  setDraftRole = (role) => () => this.setState(s => ({ draft: { ...s.draft, role } }));
+
+  generateCharacter = () => {
+    this.setState({ isGeneratingChar: true, hasPreview: false });
+    setTimeout(() => {
+      this.setState({ isGeneratingChar: false, hasPreview: true });
+    }, 1200);
+  };
+  regenerateCharacter = () => this.generateCharacter();
+
+  saveCharacter = () => {
+    const s = this.state;
+    if (!s.hasPreview || !s.draft.name) return;
+    const id = 'c' + Date.now();
+    const gradient = this.gradientFor(s.draft.hairColor, s.draft.eyeColor);
+    const newChar = { id, ...s.draft, gradient, initial: s.draft.name.trim().charAt(0).toUpperCase() || '?' };
+    this.setState(prev => ({
+      characters: [...prev.characters, newChar],
+      draft: this.blankDraft(),
+      hasPreview: false,
+      charTab: 'gallery',
+    }));
+  };
+
+  gradientFor = (c1, c2) => `linear-gradient(135deg, ${c1}CC, ${c2}CC)`;
+
+  continueToEpisodeSetup = () => this.setState({ screen: 'episodeSetup' });
+
+  setEpisodeField = (field) => (e) => {
+    const val = e && e.target ? e.target.value : e;
+    this.setState(s => ({ episodeConfig: { ...s.episodeConfig, [field]: val } }));
+  };
+  setTheme = (theme) => () => this.setState(s => ({ episodeConfig: { ...s.episodeConfig, theme } }));
+  setDuration = (duration) => () => this.setState(s => ({ episodeConfig: { ...s.episodeConfig, duration } }));
+
+  generateStory = () => {
+    this.setState({ screen: 'story', isGeneratingStory: true, isStoryReady: false });
+    setTimeout(() => {
+      const s = this.state;
+      const heroName = (s.characters[0] && s.characters[0].name) || 'Momo';
+      const friendName = (s.characters[1] && s.characters[1].name) || 'Kiko';
+      const theme = s.episodeConfig.theme;
+      const title = `${heroName} and the ${theme === 'Mystery' ? 'Missing Umbrella' : theme === 'Fantasy' ? 'Puddle Portal' : 'Rainy Day Surprise'}`;
+      const roleChips = s.characters.length ? s.characters.map(c => ({ name: c.name, role: c.role })) : [{ name: heroName, role: 'Hero' }, { name: friendName, role: 'Friend' }];
+      this.setState({
+        isGeneratingStory: false,
+        isStoryReady: true,
+        story: {
+          title,
+          synopsis: `A ${theme.toLowerCase()} tale about ${heroName} learning that even a rained-out afternoon can turn into an adventure.`,
+          beginning: `${heroName} is stuck inside on a rainy afternoon, bored and restless, until a puddle outside starts to glow.`,
+          middle: `${heroName} and ${friendName} follow the glow through the garden, facing silly obstacles and a mixed-up rain cloud.`,
+          ending: `Together they solve the mystery of the glowing puddle and turn the gloomy day into their favorite memory yet.`,
+          full: `Scene 1: ${heroName} presses their nose to the window, watching rain streak the glass.\n\nScene 2: ${friendName} arrives with an umbrella and a wild idea \u2014 what if they explored the garden puddles?\n\nScene 3: The puddle by the fence begins to shimmer with a soft, curious light.\n\nScene 4: ${heroName} and ${friendName} discover the light is coming from something magical hidden beneath the water.\n\nScene 5: With a little courage and a lot of giggling, they solve the mystery and skip home together, already planning their next rainy-day adventure.`,
+          roleChips,
+          approved: false,
+        },
+      });
+    }, 1500);
+  };
+  regenerateStory = () => this.generateStory();
+  setStoryFull = (e) => {
+    const val = e && e.target ? e.target.value : e;
+    this.setState(s => ({ story: { ...s.story, full: val } }));
+  };
+  toggleEditStory = () => this.setState(s => ({ isEditingStory: !s.isEditingStory }));
+  approveStory = () => {
+    this.setState(s => ({ story: { ...s.story, approved: true }, isEditingStory: false, screen: 'scenes' }));
+    this.generateScenes();
+  };
+
+  sceneTemplates = [
+    { title: 'A Grey Afternoon', location: 'Living room window', camera: 'Medium close-up', mood: 'Restless', action: 'Rain streaks the glass while the hero sighs, staring out at the wet garden.', caption: "Another rainy day... nothing ever happens around here." },
+    { title: 'A Knock at the Door', location: 'Front hallway', camera: 'Wide shot', mood: 'Curious', action: 'A friend bursts in shaking off an umbrella, grinning with an idea.', caption: "Come on, I found something you HAVE to see!" },
+    { title: 'The Glowing Puddle', location: 'Back garden fence', camera: 'Low angle', mood: 'Wonder', action: 'The two peer down at a puddle rippling with soft light from below.', caption: "Whoa... puddles aren't supposed to do that." },
+    { title: 'Into the Light', location: 'Garden, dusk', camera: 'Over-the-shoulder', mood: 'Adventurous', action: 'They kneel down together and reach toward the glimmering water.', caption: "One, two, three... together!" },
+    { title: 'The Secret Revealed', location: 'Garden, dusk', camera: 'Close-up', mood: 'Joyful', action: 'A tiny glowing creature rises from the puddle, and both kids burst into laughter.', caption: "Best. Rainy day. Ever." },
+    { title: 'Walking Home', location: 'Village path', camera: 'Wide tracking shot', mood: 'Warm', action: 'The pair walk home under a clearing sky, already planning their next adventure.', caption: "Same time tomorrow, rain or shine?" },
+    { title: 'Golden Goodbye', location: 'Front gate', camera: 'Medium shot', mood: 'Heartwarming', action: 'They wave goodbye as the sun breaks through the clouds.', caption: "See you tomorrow, friend." },
+    { title: 'Nightfall Wonder', location: 'Bedroom window', camera: 'Close-up', mood: 'Peaceful', action: 'The hero smiles up at the stars, hugging a small keepsake from the day.', caption: "I knew today would be special." },
+  ];
+
+  generateScenes = () => {
+    const s = this.state;
+    const n = Math.min(this.sceneTemplates.length, Math.max(3, Number(s.episodeConfig.numScenes) || 5));
+    const charNames = s.characters.length ? s.characters.map(c => c.name) : ['Momo', 'Kiko'];
+    const scenes = this.sceneTemplates.slice(0, n).map((t, i) => ({
+      id: 'sc' + (i + 1),
+      number: i + 1,
+      title: t.title,
+      description: `${t.action}`,
+      charactersInvolved: charNames.slice(0, 2).join(', '),
+      location: t.location,
+      camera: t.camera,
+      mood: t.mood,
+      action: t.action,
+      caption: t.caption,
+      imagePrompt: `${t.location}, ${t.mood.toLowerCase()} mood, ${charNames.slice(0,2).join(' and ')}, anime style, ${s.episodeConfig.visualStyle.toLowerCase()}`,
+      videoPrompt: `Animate: ${t.action}`,
+      approved: false,
+      gradient: this.sceneGradient(i),
+    }));
+    this.setState({ scenes });
+  };
+
+  sceneGradient = (i) => {
+    const palettes = [
+      'linear-gradient(135deg,#3B2E6B,#6B3E7A)', 'linear-gradient(135deg,#2E4B6B,#3E6B85)',
+      'linear-gradient(135deg,#6B2E3E,#8A3E4F)', 'linear-gradient(135deg,#3E6B4F,#2E6B6B)',
+      'linear-gradient(135deg,#6B4F2E,#8A6B3E)', 'linear-gradient(135deg,#4B2E6B,#6B3E85)',
+      'linear-gradient(135deg,#2E6B5C,#3E856B)', 'linear-gradient(135deg,#6B2E5C,#8A3E7A)',
+    ];
+    return palettes[i % palettes.length];
+  };
+
+  approveScene = (id) => () => this.setState(s => ({ scenes: s.scenes.map(sc_ => sc_.id === id ? { ...sc_, approved: true } : sc_) }));
+  regenerateScene = (id) => () => this.setState(s => ({ scenes: s.scenes.map(sc_ => sc_.id === id ? { ...sc_, approved: false } : sc_) }));
+
+  goToImages = () => {
+    this.setState({ screen: 'images' });
+    this.generateImages();
+  };
+
+  generateImages = () => {
+    const s = this.state;
+    const images = {};
+    s.scenes.forEach((sc_, i) => {
+      images[sc_.id] = {
+        status: 'generating',
+        selectedVariant: null,
+        variants: [0, 1, 2, 3].map(v => ({ id: v, gradient: this.sceneGradient(i + v) })),
+      };
+    });
+    this.setState({ images, imagesGenerating: true });
+    setTimeout(() => {
+      this.setState(s2 => {
+        const next = { ...s2.images };
+        Object.keys(next).forEach(k => { next[k] = { ...next[k], status: 'ready', selectedVariant: 0 }; });
+        return { images: next, imagesGenerating: false };
+      });
+    }, 1400);
+  };
+
+  selectImageVariant = (sceneId, variantId) => () => this.setState(s => ({
+    images: { ...s.images, [sceneId]: { ...s.images[sceneId], selectedVariant: variantId, status: 'ready' } },
+  }));
+  approveImage = (sceneId) => () => this.setState(s => ({ images: { ...s.images, [sceneId]: { ...s.images[sceneId], status: 'approved' } } }));
+  regenerateImage = (sceneId) => () => {
+    this.setState(s => ({ images: { ...s.images, [sceneId]: { ...s.images[sceneId], status: 'generating' } } }));
+    setTimeout(() => {
+      this.setState(s => ({ images: { ...s.images, [sceneId]: { ...s.images[sceneId], status: 'ready' } } }));
+    }, 1200);
+  };
+
+  goToVideos = () => {
+    this.setState({ screen: 'videos' });
+    this.generateVideos();
+  };
+
+  generateVideos = () => {
+    const s = this.state;
+    const videos = {};
+    s.scenes.forEach(sc_ => { videos[sc_.id] = { status: 'generating' }; });
+    this.setState({ videos });
+    s.scenes.forEach((sc_, i) => {
+      setTimeout(() => {
+        this.setState(s2 => ({ videos: { ...s2.videos, [sc_.id]: { ...s2.videos[sc_.id], status: 'ready' } } }));
+      }, 900 + i * 500);
+    });
+  };
+  approveVideo = (sceneId) => () => this.setState(s => ({ videos: { ...s.videos, [sceneId]: { ...s.videos[sceneId], status: 'approved' } } }));
+  regenerateVideo = (sceneId) => () => {
+    this.setState(s => ({ videos: { ...s.videos, [sceneId]: { ...s.videos[sceneId], status: 'generating' } } }));
+    setTimeout(() => {
+      this.setState(s => ({ videos: { ...s.videos, [sceneId]: { ...s.videos[sceneId], status: 'ready' } } }));
+    }, 1200);
+  };
+
+  goToFinal = () => this.setState({ screen: 'final' });
+  toggleCaptions = () => this.setState(s => ({ finalConfig: { ...s.finalConfig, captionsOn: !s.finalConfig.captionsOn } }));
+  setMusic = (e) => this.setState(s => ({ finalConfig: { ...s.finalConfig, music: e.target ? e.target.value : e } }));
+  setExportFormat = (fmt) => () => this.setState(s => ({ finalConfig: { ...s.finalConfig, format: fmt } }));
+
+  renderVals() {
+    const s = this.state;
+    const screen = s.screen;
+
+    const isLanding = screen === 'landing';
+    const isLogin = screen === 'login';
+    const isDashboard = screen === 'dashboard';
+    const isProjectDetail = screen === 'projectDetail';
+    const flowScreens = ['characters','episodeSetup','story','scenes','images','videos','final'];
+    const showStepper = flowScreens.includes(screen);
+    const showTopNav = true;
+    const isLoggedInNav = screen !== 'landing' && screen !== 'login';
+
+    const landingFeatures = [
+      { icon: '\u2728', bg: 'rgba(139,92,246,0.15)', title: 'Design your cast', desc: 'Build named anime characters with a style, personality, and role in the story.' },
+      { icon: '\ud83d\udcda', bg: 'rgba(236,72,153,0.15)', title: 'AI writes the episode', desc: 'Pick a theme and duration \u2014 get a full script broken into shootable scenes.' },
+      { icon: '\ud83c\udfac', bg: 'rgba(79,140,255,0.15)', title: 'Approve, then render', desc: 'Review every scene, image, and clip before it becomes your final episode.' },
+    ];
+
+    const projects = [
+      { id: 'p1', title: "Momo's Rainy Day", meta: '4 characters \u00b7 Friendship \u00b7 2 min', initials: 'MR', statusLabel: 'Video Ready', statusBg: 'rgba(52,211,153,0.18)', statusColor: '#6EE7B7', progressPct: '100%', thumbGradient: 'linear-gradient(135deg,#3B2E6B,#6B3E7A)', onOpen: () => this.openProject({id:'p1'}) },
+      { id: 'p2', title: 'Starlight Academy', meta: '3 characters \u00b7 School life \u00b7 1 min', initials: 'SA', statusLabel: 'Images Generated', statusBg: 'rgba(139,92,246,0.18)', statusColor: '#C4B5FD', progressPct: '78%', thumbGradient: 'linear-gradient(135deg,#2E4B6B,#3E6B85)', onOpen: () => this.openProject({id:'p2'}) },
+      { id: 'p3', title: 'The Last Ember', meta: '5 characters \u00b7 Fantasy \u00b7 3 min', initials: 'LE', statusLabel: 'Story Approved', statusBg: 'rgba(251,191,36,0.18)', statusColor: '#FCD34D', progressPct: '42%', thumbGradient: 'linear-gradient(135deg,#6B2E3E,#8A3E4F)', onOpen: () => this.openProject({id:'p3'}) },
+      { id: 'p4', title: 'Untitled Draft', meta: '1 character \u00b7 Not started', initials: 'UD', statusLabel: 'Draft', statusBg: 'rgba(156,153,180,0.18)', statusColor: '#B8B5CC', progressPct: '10%', thumbGradient: 'linear-gradient(135deg,#2A283C,#3A3750)', onOpen: () => this.openProject({id:'p4'}) },
+    ];
+    const selectedProject = projects.find(p => p.id === s.selectedProjectId) || projects[0];
+
+    const stepDefs = [
+      { key: 'characters', label: 'Characters' },
+      { key: 'episodeSetup', label: 'Episode Setup' },
+      { key: 'story', label: 'Story' },
+      { key: 'scenes', label: 'Scenes' },
+      { key: 'images', label: 'Images' },
+      { key: 'videos', label: 'Videos' },
+      { key: 'final', label: 'Export' },
+    ];
+    const currentIdx = flowScreens.indexOf(screen);
+    const stepList = stepDefs.map((d, i) => {
+      const state_ = i < currentIdx ? 'done' : i === currentIdx ? 'active' : 'future';
+      const bg = state_ === 'done' ? 'linear-gradient(135deg,#8B5CF6,#EC4899)' : state_ === 'active' ? 'linear-gradient(135deg,#8B5CF6,#EC4899)' : 'rgba(255,255,255,0.06)';
+      const color = state_ === 'future' ? '#6B6880' : '#fff';
+      const border = state_ === 'active' ? '2px solid rgba(255,255,255,0.6)' : 'none';
+      const glow = state_ === 'active' ? '0 0 14px rgba(139,92,246,0.7)' : 'none';
+      return {
+        badge: state_ === 'done' ? '\u2713' : (i + 1).toString(),
+        label: d.label,
+        bg, color, border, glow,
+        textColor: state_ === 'future' ? '#6B6880' : '#F5F4FA',
+        opacity: state_ === 'future' ? '0.55' : '1',
+        clickable: state_ === 'future' ? 'default' : 'pointer',
+        showConnector: i < stepDefs.length - 1,
+        connectorColor: state_ === 'done' ? '#8B5CF6' : 'rgba(255,255,255,0.1)',
+        onClick: state_ === 'future' ? undefined : () => this.setState({ screen: d.key }),
+      };
+    });
+
+    const isCharacters = screen === 'characters';
+    const charTabIsCreate = s.charTab === 'create';
+    const charTabIsGallery = s.charTab === 'gallery';
+    const hasCharacters = s.characters.length > 0;
+    const hasNoCharacters = !hasCharacters;
+
+    const ageGroupOptions = ['Kid (5-9)', 'Tween (10-13)', 'Teen (14-17)', 'Young adult'];
+    const genderOptions = ['Girl', 'Boy', 'Non-binary'];
+    const personalityOptions = ['Cheerful', 'Brave', 'Shy', 'Mischievous', 'Wise', 'Hot-headed'];
+    const animeStyleOptions = ['Chibi / Cute', 'Shonen action', 'Shojo soft', 'Studio classic'];
+    const hairStyleOptions = ['Twin tails', 'Short bob', 'Long straight', 'Spiky', 'Ponytail'];
+    const outfitStyleOptions = ['Everyday casual', 'School uniform', 'Fantasy armor', 'Superhero suit', 'Traditional wear'];
+    const roleOptions_ = ['Hero', 'Friend', 'Villain', 'Mentor', 'Side Character'];
+    const hairColorSwatches = ['#2B2B33', '#7B4B2A', '#E85D9E', '#F5D76E', '#4F8CFF', '#EEEEF0'];
+    const eyeColorSwatches = ['#4F8CFF', '#34D399', '#8B5CF6', '#7B4B2A', '#2B2B33', '#EC4899'];
+
+    const hairColorOptions = hairColorSwatches.map(hex => ({
+      hex, onClick: this.setDraftColorField('hairColor', hex),
+      border: s.draft.hairColor === hex ? '2px solid #fff' : '2px solid transparent',
+      glow: s.draft.hairColor === hex ? '0 0 0 2px #8B5CF6' : 'none',
+    }));
+    const eyeColorOptions = eyeColorSwatches.map(hex => ({
+      hex, onClick: this.setDraftColorField('eyeColor', hex),
+      border: s.draft.eyeColor === hex ? '2px solid #fff' : '2px solid transparent',
+      glow: s.draft.eyeColor === hex ? '0 0 0 2px #8B5CF6' : 'none',
+    }));
+    const roleOptions = roleOptions_.map(r => ({
+      label: r, onClick: this.setDraftRole(r),
+      bg: s.draft.role === r ? 'linear-gradient(135deg,#8B5CF6,#EC4899)' : 'rgba(255,255,255,0.05)',
+      color: s.draft.role === r ? '#fff' : '#C9C6DA',
+      border: s.draft.role === r ? 'none' : '1px solid rgba(255,255,255,0.12)',
+    }));
+
+    const previewGradient = this.gradientFor(s.draft.hairColor, s.draft.eyeColor);
+    const previewInitial = (s.draft.name || '?').trim().charAt(0).toUpperCase() || '?';
+    const showEmptyPreview = !s.isGeneratingChar && !s.hasPreview;
+    const previewSubline = s.hasPreview ? `${s.draft.role} \u00b7 ${s.draft.personality} \u00b7 ${s.draft.animeStyle}` : 'No preview yet';
+    const generateBtnLabel = s.isGeneratingChar ? 'Generating\u2026' : (s.hasPreview ? 'Regenerate character' : 'Generate character');
+    const saveDisabled = !s.hasPreview || !s.draft.name;
+    const saveBtnBg = saveDisabled ? 'rgba(255,255,255,0.06)' : 'linear-gradient(135deg,#8B5CF6,#EC4899)';
+    const saveBtnColor = saveDisabled ? '#6B6880' : '#fff';
+
+    const isEpisodeSetup = screen === 'episodeSetup';
+    const isStory = screen === 'story';
+    const themeList = ['Adventure','Friendship','Fantasy','School life','Mystery','Comedy','Superhero','Emotional drama','Sci-fi','Magical world'];
+    const durationList = ['30 seconds','1 minute','2 minutes','3 minutes','5 minutes'];
+    const audienceOptions = ['Kids (5-9)','Tweens (10-13)','Teens','All ages'];
+    const moodOptions = ['Wholesome','Adventurous','Suspenseful','Funny','Bittersweet'];
+    const visualStyleOptions = ['Soft pastel anime','Vivid shonen','Dreamy shojo','Retro cel-shaded'];
+    const languageOptions = ['English','Japanese (subtitled)','Spanish','Hindi','French'];
+
+    const themeOptions = themeList.map(t => ({
+      label: t, onClick: this.setTheme(t),
+      bg: s.episodeConfig.theme === t ? 'linear-gradient(135deg,#8B5CF6,#EC4899)' : 'rgba(255,255,255,0.04)',
+      color: s.episodeConfig.theme === t ? '#fff' : '#C9C6DA',
+      border: s.episodeConfig.theme === t ? 'none' : '1px solid rgba(255,255,255,0.1)',
+    }));
+    const durationOptions = durationList.map(d => ({
+      label: d, onClick: this.setDuration(d),
+      bg: s.episodeConfig.duration === d ? 'linear-gradient(135deg,#8B5CF6,#EC4899)' : 'rgba(255,255,255,0.04)',
+      color: s.episodeConfig.duration === d ? '#fff' : '#C9C6DA',
+      border: s.episodeConfig.duration === d ? 'none' : '1px solid rgba(255,255,255,0.1)',
+    }));
+
+    const isGeneratingStory = s.isGeneratingStory;
+    const isStoryReady = s.isStoryReady && !!s.story;
+    const isEditingStory = s.isEditingStory;
+    const notEditingStory = !s.isEditingStory;
+    const editStoryLabel = s.isEditingStory ? 'Done editing' : 'Edit story manually';
+
+    // ---- Scenes ----
+    const isScenes = screen === 'scenes';
+    const scenesApprovedCount = s.scenes.filter(sc_ => sc_.approved).length;
+    const allScenesApproved = s.scenes.length > 0 && scenesApprovedCount === s.scenes.length;
+    const scenes = s.scenes.map(sc_ => ({
+      ...sc_,
+      borderColor: sc_.approved ? 'rgba(52,211,153,0.4)' : 'rgba(255,255,255,0.08)',
+      statusLabel: sc_.approved ? 'Approved' : 'Ready for review',
+      statusBg: sc_.approved ? 'rgba(52,211,153,0.18)' : 'rgba(251,191,36,0.16)',
+      statusColor: sc_.approved ? '#6EE7B7' : '#FCD34D',
+      approveLabel: sc_.approved ? '\u2713 Approved' : 'Approve scene',
+      approveBg: sc_.approved ? 'rgba(52,211,153,0.2)' : 'linear-gradient(135deg,#34D399,#10B981)',
+      approveColor: sc_.approved ? '#6EE7B7' : '#06251A',
+      onApprove: this.approveScene(sc_.id),
+      onRegenerate: this.regenerateScene(sc_.id),
+    }));
+
+    // ---- Images ----
+    const isImages = screen === 'images';
+    const imageScenes = s.scenes.map(sc_ => {
+      const im = s.images[sc_.id] || { status: 'pending', variants: [], selectedVariant: null };
+      const approved = im.status === 'approved';
+      const variants = (im.variants || []).map(v => ({
+        ...v,
+        isSelected: im.selectedVariant === v.id,
+        isGenerating: im.status === 'generating',
+        border: im.selectedVariant === v.id ? '2px solid #8B5CF6' : '2px solid transparent',
+        onSelect: this.selectImageVariant(sc_.id, v.id),
+      }));
+      const statusLabel = im.status === 'generating' ? 'Generating' : im.status === 'approved' ? 'Approved' : im.status === 'ready' ? 'Ready' : 'Pending';
+      return {
+        id: sc_.id, number: sc_.number, title: sc_.title, prompt: sc_.imagePrompt, charactersInvolved: sc_.charactersInvolved,
+        isGenerating: im.status === 'generating', variants,
+        statusLabel, statusBg: approved ? 'rgba(52,211,153,0.18)' : im.status === 'generating' ? 'rgba(251,191,36,0.16)' : 'rgba(79,140,255,0.16)',
+        statusColor: approved ? '#6EE7B7' : im.status === 'generating' ? '#FCD34D' : '#93B8FF',
+        borderColor: approved ? 'rgba(52,211,153,0.4)' : 'rgba(255,255,255,0.08)',
+        approveLabel: approved ? '\u2713 Approved' : 'Approve image',
+        approveBg: approved ? 'rgba(52,211,153,0.2)' : 'linear-gradient(135deg,#34D399,#10B981)',
+        approveColor: approved ? '#6EE7B7' : '#06251A',
+        onApprove: this.approveImage(sc_.id),
+        onRegenerate: this.regenerateImage(sc_.id),
+      };
+    });
+    const imagesApprovedCount = Object.values(s.images).filter(im => im.status === 'approved').length;
+    const allImagesApproved = s.scenes.length > 0 && imagesApprovedCount === s.scenes.length;
+
+    // ---- Videos ----
+    const isVideos = screen === 'videos';
+    const videoScenes = s.scenes.map(sc_ => {
+      const vd = s.videos[sc_.id] || { status: 'pending' };
+      const approved = vd.status === 'approved';
+      const ready = vd.status === 'ready' || approved;
+      const im = s.images[sc_.id];
+      const gradient = (im && im.variants && im.variants[im.selectedVariant || 0]) ? im.variants[im.selectedVariant || 0].gradient : this.sceneGradient(sc_.number);
+      return {
+        id: sc_.id, number: sc_.number, title: sc_.title, caption: sc_.caption, motionPrompt: sc_.videoPrompt,
+        duration: '6s', gradient,
+        isGenerating: vd.status === 'generating', isReady: ready,
+        statusLabel: approved ? 'Approved' : vd.status === 'generating' ? 'Generating' : ready ? 'Ready' : 'Queued',
+        statusBg: approved ? 'rgba(52,211,153,0.18)' : vd.status === 'generating' ? 'rgba(251,191,36,0.16)' : 'rgba(79,140,255,0.16)',
+        statusColor: approved ? '#6EE7B7' : vd.status === 'generating' ? '#FCD34D' : '#93B8FF',
+        borderColor: approved ? 'rgba(52,211,153,0.4)' : 'rgba(255,255,255,0.08)',
+        approveLabel: approved ? '\u2713 Approved' : 'Approve video',
+        approveBg: approved ? 'rgba(52,211,153,0.2)' : 'linear-gradient(135deg,#34D399,#10B981)',
+        approveColor: approved ? '#6EE7B7' : '#06251A',
+        onApprove: this.approveVideo(sc_.id),
+        onRegenerate: this.regenerateVideo(sc_.id),
+      };
+    });
+    const videosApprovedCount = Object.values(s.videos).filter(vd => vd.status === 'approved').length;
+    const allVideosApproved = s.scenes.length > 0 && videosApprovedCount === s.scenes.length;
+
+    // ---- Final ----
+    const isFinal = screen === 'final';
+    const musicOptions = ['Warm acoustic (default)', 'Playful pizzicato', 'Dreamy synth', 'None'];
+    const exportFormatList = ['YouTube Shorts', 'Instagram Reels', 'TikTok', 'Landscape video', 'Square video'];
+    const exportFormatOptions = exportFormatList.map(f => ({
+      label: f, onClick: this.setExportFormat(f),
+      bg: s.finalConfig.format === f ? 'linear-gradient(135deg,#8B5CF6,#EC4899)' : 'rgba(255,255,255,0.04)',
+      color: s.finalConfig.format === f ? '#fff' : '#C9C6DA',
+      border: s.finalConfig.format === f ? 'none' : '1px solid rgba(255,255,255,0.1)',
+    }));
+    const captionsToggleBg = s.finalConfig.captionsOn ? 'linear-gradient(135deg,#8B5CF6,#EC4899)' : 'rgba(255,255,255,0.12)';
+    const captionsKnobLeft = s.finalConfig.captionsOn ? '22px' : '2.5px';
+
+    return {
+      isLanding, isLogin, isDashboard, isProjectDetail,
+      isScenes, scenesApprovedCount, allScenesApproved, scenes,
+      isImages, imageScenes, imagesApprovedCount, allImagesApproved,
+      isVideos, videoScenes, videosApprovedCount, allVideosApproved,
+      isFinal, musicOptions, exportFormatOptions, captionsToggleBg, captionsKnobLeft,
+      finalConfig: s.finalConfig,
+      goToImages: this.goToImages, goToVideos: this.goToVideos, goToFinal: this.goToFinal,
+      toggleCaptions: this.toggleCaptions, setMusic: this.setMusic,
+      isEpisodeSetup, isStory, isGeneratingStory, isStoryReady, isEditingStory, notEditingStory, editStoryLabel,
+      episodeConfig: s.episodeConfig, story: s.story || {},
+      themeOptions, durationOptions, audienceOptions, moodOptions, visualStyleOptions, languageOptions,
+      setAudience: this.setEpisodeField('audience'), setMood: this.setEpisodeField('mood'),
+      setVisualStyle: this.setEpisodeField('visualStyle'), setLanguage: this.setEpisodeField('language'),
+      setNumScenes: this.setEpisodeField('numScenes'), setIdea: this.setEpisodeField('idea'),
+      generateStory: this.generateStory, regenerateStory: this.regenerateStory,
+      setStoryFull: this.setStoryFull, toggleEditStory: this.toggleEditStory, approveStory: this.approveStory,
+      isCharacters, charTabIsCreate, charTabIsGallery, hasCharacters, hasNoCharacters,
+      setCharTabCreate: this.setCharTabCreate, setCharTabGallery: this.setCharTabGallery,
+      charTabCreateBg: charTabIsCreate ? '#8B5CF6' : 'transparent',
+      charTabCreateColor: charTabIsCreate ? '#fff' : '#9C99B4',
+      charTabGalleryBg: charTabIsGallery ? '#8B5CF6' : 'transparent',
+      charTabGalleryColor: charTabIsGallery ? '#fff' : '#9C99B4',
+      draft: s.draft, characters: s.characters,
+      ageGroupOptions, genderOptions, personalityOptions, animeStyleOptions, hairStyleOptions, outfitStyleOptions,
+      hairColorOptions, eyeColorOptions, roleOptions,
+      setDraftName: this.setDraftField('name'), setDraftAgeGroup: this.setDraftField('ageGroup'),
+      setDraftGender: this.setDraftField('gender'), setDraftPersonality: this.setDraftField('personality'),
+      setDraftAnimeStyle: this.setDraftField('animeStyle'), setDraftHairStyle: this.setDraftField('hairStyle'),
+      setDraftOutfitStyle: this.setDraftField('outfitStyle'), setDraftPrompt: this.setDraftField('prompt'),
+      generateCharacter: this.generateCharacter, regenerateCharacter: this.regenerateCharacter,
+      saveCharacter: this.saveCharacter, continueToEpisodeSetup: this.continueToEpisodeSetup,
+      isGeneratingChar: s.isGeneratingChar, hasPreview: s.hasPreview,
+      previewGradient, previewInitial, showEmptyPreview, previewSubline, generateBtnLabel,
+      saveDisabled, saveBtnBg, saveBtnColor,
+      showStepper, showTopNav, isLoggedInNav,
+      goLanding: this.goLanding, goLogin: this.goLogin, goDashboard: this.goDashboard,
+      startNewEpisode: this.startNewEpisode,
+      authTab: s.authTab,
+      authTabLoginBg: s.authTab === 'login' ? '#8B5CF6' : 'transparent',
+      authTabLoginColor: s.authTab === 'login' ? '#fff' : '#9C99B4',
+      authTabSignupBg: s.authTab === 'signup' ? '#8B5CF6' : 'transparent',
+      authTabSignupColor: s.authTab === 'signup' ? '#fff' : '#9C99B4',
+      setAuthTabLogin: this.setAuthTabLogin, setAuthTabSignup: this.setAuthTabSignup,
+      authHeadline: s.authTab === 'login' ? 'Welcome back' : 'Start your studio',
+      authSubline: s.authTab === 'login' ? 'Log in to keep working on your episodes.' : 'Create an account to start your first anime episode.',
+      authCta: s.authTab === 'login' ? 'Log in' : 'Create account',
+      landingFeatures,
+      projects, selectedProject,
+      resumeProject: () => this.setState({ screen: 'characters' }),
+      stepList,
+    };
+  }
+}
+
+</script>
+</body>
+</html>
