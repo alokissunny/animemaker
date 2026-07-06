@@ -53,11 +53,11 @@ export function Login({
         </div>
         <div style={{ fontFamily: fonts.display, fontWeight: 700, fontSize: 20, marginBottom: 6 }}>{isLogin ? 'Welcome back' : 'Start your studio'}</div>
         <div style={{ fontSize: 13, color: '#9C99B4', marginBottom: 24 }}>
-          {isLogin ? 'Log in to keep working on your episodes.' : 'Create an account to start your first anime episode.'}
+          {isLogin ? 'Log in to keep working on your episodes.' : "Create an account to start your first kids' show episode."}
         </div>
         {isLogin && (
           <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.25)', fontSize: 12, color: '#C4B5FD', marginBottom: 18 }}>
-            Test credential: <strong>demo@nova.app</strong> / <strong>anime123</strong>
+            Test credential: <strong>demo@nova.app</strong> / <strong>showtime123</strong>
           </div>
         )}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>

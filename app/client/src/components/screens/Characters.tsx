@@ -3,13 +3,13 @@ import { colors, fonts, inputStyle, labelStyle, selectStyle } from '../../theme'
 import { dataUri } from '../../api';
 import { ErrorBanner, PrimaryButton, SecondaryButton, ShimmerOverlay } from '../ui';
 
-const ageGroupOptions = ['Kid (5-9)', 'Tween (10-13)', 'Teen (14-17)', 'Young adult'];
+const ageGroupOptions = ['Toddler (2-4)', 'Preschool (3-5)', 'Kid (6-9)', 'Adult (parent/caregiver)'];
 const genderOptions = ['Girl', 'Boy', 'Non-binary'];
-const personalityOptions = ['Cheerful', 'Brave', 'Shy', 'Mischievous', 'Wise', 'Hot-headed'];
-const animeStyleOptions = ['Chibi / Cute', 'Shonen action', 'Shojo soft', 'Studio classic'];
+const personalityOptions = ['Cheerful', 'Brave', 'Shy', 'Mischievous', 'Wise', 'Silly'];
+const animeStyleOptions = ['Storybook 2D (Peppa Pig style)', 'Preschool 3D (Cocomelon style)', 'Claymation', 'Simple flat cartoon'];
 const hairStyleOptions = ['Twin tails', 'Short bob', 'Long straight', 'Spiky', 'Ponytail'];
-const outfitStyleOptions = ['Everyday casual', 'School uniform', 'Fantasy armor', 'Superhero suit', 'Traditional wear'];
-const roleOptions = ['Hero', 'Friend', 'Villain', 'Mentor', 'Side Character'];
+const outfitStyleOptions = ['Everyday casual', 'School uniform', 'Pajamas', 'Superhero suit', 'Traditional wear'];
+const roleOptions = ['Main Character', 'Sibling', 'Friend', 'Parent', 'Teacher'];
 const hairColorSwatches = ['#2B2B33', '#7B4B2A', '#E85D9E', '#F5D76E', '#4F8CFF', '#EEEEF0'];
 const eyeColorSwatches = ['#4F8CFF', '#34D399', '#8B5CF6', '#7B4B2A', '#2B2B33', '#EC4899'];
 
@@ -86,7 +86,7 @@ export function Characters({
   return (
     <div data-screen-label="Character Creation" style={{ maxWidth: 1240, margin: '0 auto', padding: '32px 32px 90px' }}>
       <div style={{ marginBottom: 28 }}>
-        <div style={{ fontFamily: fonts.display, fontWeight: 800, fontSize: 26, marginBottom: 6 }}>Create your anime cast</div>
+        <div style={{ fontFamily: fonts.display, fontWeight: 800, fontSize: 26, marginBottom: 6 }}>Create your show's cast</div>
         <div style={{ fontSize: 14, color: colors.muted }}>Design each character, then finalize your cast before moving on.</div>
       </div>
 
@@ -110,7 +110,7 @@ export function Characters({
               <Select label="Age group" value={draft.ageGroup} onChange={setDraftField('ageGroup')} options={ageGroupOptions} />
               <Select label="Gender" value={draft.gender} onChange={setDraftField('gender')} options={genderOptions} />
               <Select label="Personality" value={draft.personality} onChange={setDraftField('personality')} options={personalityOptions} />
-              <Select label="Anime style" value={draft.animeStyle} onChange={setDraftField('animeStyle')} options={animeStyleOptions} />
+              <Select label="Character style" value={draft.animeStyle} onChange={setDraftField('animeStyle')} options={animeStyleOptions} />
               <Select label="Hair style" value={draft.hairStyle} onChange={setDraftField('hairStyle')} options={hairStyleOptions} />
               <SwatchRow label="Hair color" value={draft.hairColor} options={hairColorSwatches} onChange={setDraftField('hairColor')} />
               <SwatchRow label="Eye color" value={draft.eyeColor} options={eyeColorSwatches} onChange={setDraftField('eyeColor')} />

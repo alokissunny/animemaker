@@ -1,6 +1,6 @@
-# Nova — Anime Maker (MVP)
+# Nova — Kids Show Maker (MVP)
 
-A real implementation of the `Anime Maker MVP.dc.html` design exported from Claude Design (see `../README.md` and `../chats/chat1.md` for the design brief and decisions).
+A real implementation of the `Anime Maker MVP.dc.html` design exported from Claude Design (see `../README.md` and `../chats/chat1.md` for the original design brief and decisions), since retargeted from an anime-style app to making kids' animated YouTube-style shows — think Peppa Pig, Cocomelon.
 
 Dark-mode SPA covering the full approval-based flow: Characters → Episode Setup → Story → Scenes → Videos → Export, plus lightly-stubbed Landing/Login/Dashboard/Project Detail screens.
 
@@ -85,7 +85,7 @@ The Final screen can stitch every **approved** scene clip into a single download
 
 ## Login & saving your project
 
-- **Login** checks against a single fixed test credential (no real accounts): **`demo@nova.app` / `anime123`** by default, shown right on the login screen. Override it via `TEST_LOGIN_EMAIL` / `TEST_LOGIN_PASSWORD` in `server/.env`. The Sign up tab remains a stub, unchanged from before.
+- **Login** checks against a single fixed test credential (no real accounts): **`demo@nova.app` / `showtime123`** by default, shown right on the login screen. Override it via `TEST_LOGIN_EMAIL` / `TEST_LOGIN_PASSWORD` in `server/.env`. The Sign up tab remains a stub, unchanged from before.
 - **Autosave**: once you have at least one character or scene, the app autosaves your whole in-progress episode (characters with portraits, episode config, story, scenes, video references, final settings) to the server a couple seconds after each change — watch for the "Saving…" / "Saved" indicator next to the avatar in the top right.
 - **Resume**: the Dashboard shows a "Resume in-progress episode" banner whenever a saved project exists — clicking it restores everything and jumps back to exactly where you left off (even after closing the tab or restarting the server).
 - This is single-slot (one in-progress episode at a time, matching the app's single continuous flow) and stored as `server/data/project.json` plus `server/data/videos/*.mp4`, not a database — fine for local/dev use. **On most hosting platforms this directory must live on a persistent volume to survive restarts/redeploys** (see Deploying below); Render's default free-tier disk is ephemeral.

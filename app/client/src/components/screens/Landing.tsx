@@ -1,9 +1,9 @@
 import { fonts } from '../../theme';
 
 const FEATURES = [
-  { icon: '✨', bg: 'rgba(139,92,246,0.15)', title: 'Design your cast', desc: 'Build named anime characters with a style, personality, and role in the story.' },
+  { icon: '✨', bg: 'rgba(139,92,246,0.15)', title: 'Design your cast', desc: 'Build named characters with a friendly style, personality, and role in the story.' },
   { icon: '📚', bg: 'rgba(236,72,153,0.15)', title: 'AI writes the episode', desc: 'Pick a theme and duration — get a full script broken into shootable scenes.' },
-  { icon: '🎬', bg: 'rgba(79,140,255,0.15)', title: 'Approve, then render', desc: 'Review every scene, image, and clip before it becomes your final episode.' },
+  { icon: '🎬', bg: 'rgba(79,140,255,0.15)', title: 'Approve, then render', desc: 'Review every scene and clip before it becomes your final episode.' },
 ];
 
 export function Landing({ onGetStarted }: { onGetStarted: () => void }) {
@@ -26,7 +26,7 @@ export function Landing({ onGetStarted }: { onGetStarted: () => void }) {
           }}
         >
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#8B5CF6', animation: 'pulseGlow 2s infinite' }} />
-          AI-powered anime production, end to end
+          AI-powered kids' show production, end to end
         </div>
         <h1
           style={{
@@ -44,10 +44,10 @@ export function Landing({ onGetStarted }: { onGetStarted: () => void }) {
         >
           Bring your characters
           <br />
-          to life in anime.
+          to life in a kids' show.
         </h1>
         <p style={{ fontSize: 18, lineHeight: 1.6, color: '#9C99B4', maxWidth: 600, margin: '0 auto 40px' }}>
-          Design your cast, spin up a story, and render a finished anime episode — no animation skills required.
+          Design your cast, spin up a story, and render a finished kids' show episode — no animation skills required.
         </p>
         <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
           <button
@@ -65,7 +65,7 @@ export function Landing({ onGetStarted }: { onGetStarted: () => void }) {
               boxShadow: '0 8px 30px rgba(139,92,246,0.4)',
             }}
           >
-            Create your anime cast →
+            Create your show's cast →
           </button>
           <button
             onClick={onGetStarted}

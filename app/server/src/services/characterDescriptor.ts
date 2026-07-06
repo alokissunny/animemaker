@@ -1,8 +1,8 @@
 const AGE_GROUP_PHRASES: Record<string, string> = {
-  'Kid (5-9)': 'a young child, about 5-9 years old, short and small-proportioned with a rounded youthful face',
-  'Tween (10-13)': 'a preteen, about 10-13 years old, with a youthful but slightly less childlike build than a young kid',
-  'Teen (14-17)': 'a teenager, about 14-17 years old, with a lean adolescent build',
-  'Young adult': 'a young adult, late teens to early twenties, with a fully mature adult build',
+  'Toddler (2-4)': 'a toddler, about 2-4 years old, with a round chubby-cheeked face and a stubby, small-proportioned body',
+  'Preschool (3-5)': 'a preschooler, about 3-5 years old, short and small-proportioned with a rounded youthful face',
+  'Kid (6-9)': 'a young child, about 6-9 years old, with a youthful but slightly less childlike build than a preschooler',
+  'Adult (parent/caregiver)': 'a grown adult (parent, teacher, or caregiver figure), with a fully mature adult build',
 };
 
 const GENDER_PHRASES: Record<string, string> = {
@@ -57,7 +57,7 @@ export function buildCharacterDescriptor(c: CharacterVisualFields): string {
     `${c.name} is ${genderPhrase(c.gender)} who is ${ageGroupPhrase(c.ageGroup)}.`,
     `Draw ${c.name} at exactly this age and body proportions — do not depict them as older or more adult than specified.`,
   ];
-  if (c.animeStyle) parts.push(`Art style: ${c.animeStyle} anime.`);
+  if (c.animeStyle) parts.push(`Art style: ${c.animeStyle}, in the visual style of a kids' animated YouTube show — simple shapes, bright flat colors, friendly rounded designs, no violence or scary elements.`);
   if (c.hairStyle || c.hairColor) {
     parts.push(`Hair: ${c.hairStyle || 'styled'}${c.hairColor ? `, ${colorName(c.hairColor)} colored` : ''}.`);
   }

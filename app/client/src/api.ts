@@ -34,7 +34,7 @@ export interface HealthStatus {
 
 export const getHealth = async (): Promise<HealthStatus> => {
   const res = await fetch(`${API_BASE}/api/health`);
-  if (!res.ok) throw new ApiRequestError('Could not reach the Anime Maker server.', 'server_unreachable');
+  if (!res.ok) throw new ApiRequestError('Could not reach the Nova server.', 'server_unreachable');
   return (await res.json()) as HealthStatus;
 };
 

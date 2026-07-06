@@ -36,15 +36,15 @@ export interface CharacterDraft {
 export function blankDraft(): CharacterDraft {
   return {
     name: '',
-    ageGroup: 'Kid (5-9)',
+    ageGroup: 'Preschool (3-5)',
     gender: 'Girl',
     personality: 'Cheerful',
-    animeStyle: 'Chibi / Cute',
+    animeStyle: 'Storybook 2D (Peppa Pig style)',
     hairStyle: 'Twin tails',
     hairColor: '#E85D9E',
     eyeColor: '#4F8CFF',
     outfitStyle: 'Everyday casual',
-    role: 'Hero',
+    role: 'Main Character',
     prompt: '',
   };
 }

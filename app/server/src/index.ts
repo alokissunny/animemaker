@@ -44,7 +44,7 @@ const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
 app.use(errorHandler);
 
 app.listen(config.port, () => {
-  console.log(`Anime Maker server listening on http://localhost:${config.port}`);
+  console.log(`Nova server listening on http://localhost:${config.port}`);
   if (!hasOpenAI()) console.warn('  ! OPENAI_API_KEY is not set — text generation will fail.');
   if (!hasGoogle()) {
     console.warn(

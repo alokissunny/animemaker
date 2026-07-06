@@ -56,10 +56,13 @@ export interface CharacterProfile {
 
 export async function generateCharacterProfile(draft: CharacterDraft): Promise<CharacterProfile> {
   const system =
-    'You are the character-generation model inside an anime production app. ' +
+    'You are the character-generation model inside an app that makes kids\' animated YouTube shows, ' +
+    'in the style of shows like Peppa Pig and Cocomelon. ' +
     'Given structured character choices, write (1) a punchy one-sentence bio for the creator ' +
-    'and (2) a vivid text-to-image prompt describing the character portrait for an anime-style image generator, ' +
+    'and (2) a vivid text-to-image prompt describing the character portrait, ' +
     'covering pose, expression, and personality-driven detail (not just a restatement of the fields). ' +
+    'Keep everything gentle, friendly, and age-appropriate for young children — simple shapes, bright flat colors, ' +
+    'rounded friendly designs, no violence or scary elements. ' +
     'The exact age group and gender are handled separately and will be prepended to your prompt verbatim, ' +
     'so do not contradict them — e.g. never age the character up or down from the given age group, ' +
     'and do not change their stated gender presentation. ' +
@@ -99,8 +102,10 @@ export async function generateStory(
   episodeConfig: EpisodeConfig
 ): Promise<StoryResult> {
   const system =
-    'You are the story-generation model inside an anime production app called Nova. ' +
-    'Write a complete, wholesome, family-friendly original anime episode story from the given characters and episode settings. ' +
+    'You are the story-generation model inside an app called Nova that makes kids\' animated YouTube shows, ' +
+    'in the style of shows like Peppa Pig and Cocomelon. ' +
+    'Write a complete, wholesome, gentle, age-appropriate original episode story from the given characters and episode settings — ' +
+    'simple language, repetition and warmth suited to young children, a clear takeaway or lesson where it fits naturally, and no violence, peril, or scary content. ' +
     'Never reuse existing copyrighted IP or character names from existing franchises — always invent an original story. ' +
     'Respond as JSON with exactly these keys: ' +
     '{"title": string, "synopsis": string, "beginning": string, "middle": string, "ending": string, "full": string, "roleChips": [{"name": string, "role": string}]}. ' +
@@ -128,12 +133,14 @@ export async function generateScenes(
   characters: Array<{ name: string; role: string }>
 ): Promise<SceneResult[]> {
   const system =
-    'You are the scene-breakdown model and caption/dialogue generator inside an anime production app. ' +
-    `Break the given approved story into exactly ${episodeConfig.numScenes} sequential scenes suitable for short anime clips. ` +
+    'You are the scene-breakdown model and caption/dialogue generator inside an app that makes kids\' animated YouTube shows, ' +
+    'in the style of shows like Peppa Pig and Cocomelon. ' +
+    `Break the given approved story into exactly ${episodeConfig.numScenes} sequential scenes suitable for short, gentle kids' show clips. ` +
     'For each scene provide: number, title, description (what happens, 1-2 sentences), charactersInvolved (comma separated names), ' +
     'location, camera (a camera angle/shot type), mood, action (concrete visual action for the animator), ' +
-    'caption (a short spoken line of dialogue or narration for that scene), ' +
+    'caption (a short, simple spoken line of dialogue or narration a young child could follow), ' +
     'videoPrompt (a short motion/camera direction describing how to animate this scene into a clip, continuing naturally from the previous scene). ' +
+    'Keep the action gentle and age-appropriate — no violence, peril, or scary content. ' +
     'Respond as JSON: {"scenes": [ ... ]} matching this shape exactly.';
   const user = JSON.stringify({ story, episodeConfig, characters });
   const result = await askForJson<{ scenes: SceneResult[] }>(system, user);
@@ -150,9 +157,11 @@ export async function regenerateOneScene(
   previousScene: SceneResult
 ): Promise<SceneResult> {
   const system =
-    'You are the scene-breakdown model and caption/dialogue generator inside an anime production app. ' +
+    'You are the scene-breakdown model and caption/dialogue generator inside an app that makes kids\' animated YouTube shows, ' +
+    'in the style of shows like Peppa Pig and Cocomelon. ' +
     'The creator disliked one scene from an already-approved story and wants a fresh alternate take on the same beat of the story. ' +
     'Keep the same scene number and the same rough position in the story, but vary the staging, camera, mood, action, or caption. ' +
+    'Keep it gentle and age-appropriate — no violence, peril, or scary content. ' +
     'Provide: number, title, description, charactersInvolved (comma separated names), location, camera, mood, action, caption, videoPrompt. ' +
     'Respond as JSON: {"scene": { ... }} matching this shape exactly.';
   const user = JSON.stringify({ story, episodeConfig, characters, previousScene });

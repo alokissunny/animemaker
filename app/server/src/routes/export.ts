@@ -55,7 +55,7 @@ exportRouter.get(
       return;
     }
     res.setHeader('Content-Type', file.mimeType);
-    res.setHeader('Content-Disposition', 'attachment; filename="anime-episode.mp4"');
+    res.setHeader('Content-Disposition', 'attachment; filename="show-episode.mp4"');
     res.setHeader('Content-Length', file.buffer.length.toString());
     res.send(file.buffer);
   })

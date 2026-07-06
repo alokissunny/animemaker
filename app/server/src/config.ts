@@ -10,7 +10,7 @@ export const config = {
   geminiImageModel: process.env.GEMINI_IMAGE_MODEL || 'gemini-2.5-flash-image',
   veoModel: process.env.VEO_MODEL || 'veo-3.1-generate-preview',
   testLoginEmail: process.env.TEST_LOGIN_EMAIL || 'demo@nova.app',
-  testLoginPassword: process.env.TEST_LOGIN_PASSWORD || 'anime123',
+  testLoginPassword: process.env.TEST_LOGIN_PASSWORD || 'showtime123',
 
   // Vertex AI mode — lets Gemini/Veo billing draw from a GCP project's Cloud credits
   // instead of the Gemini Developer API's own (separately rate-limited) quota.

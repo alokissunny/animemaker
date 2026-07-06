@@ -28,9 +28,9 @@ import {
 } from '../types';
 
 const SAMPLE_PROJECTS = [
-  { id: 'p1', title: "Momo's Rainy Day", meta: '4 characters · Friendship · 2 min', initials: 'MR', statusLabel: 'Video Ready', progressPct: '100%', thumbGradient: 'linear-gradient(135deg,#3B2E6B,#6B3E7A)' },
-  { id: 'p2', title: 'Starlight Academy', meta: '3 characters · School life · 1 min', initials: 'SA', statusLabel: 'Images Generated', progressPct: '78%', thumbGradient: 'linear-gradient(135deg,#2E4B6B,#3E6B85)' },
-  { id: 'p3', title: 'The Last Ember', meta: '5 characters · Fantasy · 3 min', initials: 'LE', statusLabel: 'Story Approved', progressPct: '42%', thumbGradient: 'linear-gradient(135deg,#6B2E3E,#8A3E4F)' },
+  { id: 'p1', title: "Lily's Rainy Day", meta: '4 characters · Friendship · 2 min', initials: 'LR', statusLabel: 'Video Ready', progressPct: '100%', thumbGradient: 'linear-gradient(135deg,#3B2E6B,#6B3E7A)' },
+  { id: 'p2', title: 'Sunshine Preschool', meta: '3 characters · Sharing & Kindness · 1 min', initials: 'SP', statusLabel: 'Videos in Progress', progressPct: '78%', thumbGradient: 'linear-gradient(135deg,#2E4B6B,#3E6B85)' },
+  { id: 'p3', title: 'Counting Farm Friends', meta: '5 characters · Counting Numbers · 3 min', initials: 'CF', statusLabel: 'Story Approved', progressPct: '42%', thumbGradient: 'linear-gradient(135deg,#6B2E3E,#8A3E4F)' },
   { id: 'p4', title: 'Untitled Draft', meta: '1 character · Not started', initials: 'UD', statusLabel: 'Draft', progressPct: '10%', thumbGradient: 'linear-gradient(135deg,#2A283C,#3A3750)' },
 ];
 
@@ -67,9 +67,9 @@ export function useAppState() {
   const [episodeConfig, setEpisodeConfig] = useState<EpisodeConfig>({
     theme: 'Friendship',
     duration: '1 minute',
-    audience: 'Kids (5-9)',
+    audience: 'Preschool (3-5)',
     mood: 'Wholesome',
-    visualStyle: 'Soft pastel anime',
+    visualStyle: 'Storybook 2D (Peppa Pig style)',
     language: 'English',
     numScenes: 5,
     idea: '',

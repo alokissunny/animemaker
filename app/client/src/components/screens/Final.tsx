@@ -168,7 +168,7 @@ export function Final({
           {exportStatus === 'ready' && exportId ? (
             <a
               href={exportFileUrl(exportId)}
-              download="anime-episode.mp4"
+              download="show-episode.mp4"
               style={{
                 flex: 1,
                 minWidth: 160,

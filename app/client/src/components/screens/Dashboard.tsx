@@ -29,13 +29,13 @@ export function Dashboard({
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32, flexWrap: 'wrap', gap: 16 }}>
         <div>
           <div style={{ fontFamily: fonts.display, fontWeight: 800, fontSize: 28, marginBottom: 4 }}>Welcome back, Maya</div>
-          <div style={{ fontSize: 14, color: '#9C99B4' }}>Pick up a project or start a brand-new anime episode.</div>
+          <div style={{ fontSize: 14, color: '#9C99B4' }}>Pick up a project or start a brand-new kids' show episode.</div>
         </div>
         <button
           onClick={onStartNew}
           style={{ border: 'none', cursor: 'pointer', padding: '14px 24px', borderRadius: 13, background: 'linear-gradient(135deg,#8B5CF6,#EC4899)', color: '#fff', fontFamily: fonts.display, fontWeight: 700, fontSize: 14.5, boxShadow: '0 8px 26px rgba(139,92,246,0.4)', display: 'flex', alignItems: 'center', gap: 8 }}
         >
-          <span style={{ fontSize: 17, lineHeight: 1 }}>+</span> Create New Anime Episode
+          <span style={{ fontSize: 17, lineHeight: 1 }}>+</span> Create New Episode
         </button>
       </div>
 

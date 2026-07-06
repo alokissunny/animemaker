@@ -2,12 +2,12 @@ import type { EpisodeConfig } from '../../types';
 import { colors, fonts, inputStyle, selectStyle } from '../../theme';
 import { PrimaryButton } from '../ui';
 
-const themeList = ['Adventure', 'Friendship', 'Fantasy', 'School life', 'Mystery', 'Comedy', 'Superhero', 'Emotional drama', 'Sci-fi', 'Magical world'];
+const themeList = ['Learning Letters', 'Counting Numbers', 'Friendship', 'Sharing & Kindness', 'Bedtime Story', 'Animal Adventure', 'Colors & Shapes', 'Sing-Along Fun', 'Playground Fun', 'Family Time'];
 const durationList = ['30 seconds', '1 minute', '2 minutes', '3 minutes', '5 minutes'];
-const audienceOptions = ['Kids (5-9)', 'Tweens (10-13)', 'Teens', 'All ages'];
-const moodOptions = ['Wholesome', 'Adventurous', 'Suspenseful', 'Funny', 'Bittersweet'];
-const visualStyleOptions = ['Soft pastel anime', 'Vivid shonen', 'Dreamy shojo', 'Retro cel-shaded'];
-const languageOptions = ['English', 'Japanese (subtitled)', 'Spanish', 'Hindi', 'French'];
+const audienceOptions = ['Toddlers (2-4)', 'Preschool (3-5)', 'Kids (6-9)', 'All ages'];
+const moodOptions = ['Wholesome', 'Playful', 'Silly', 'Calm & Soothing', 'Exciting'];
+const visualStyleOptions = ['Storybook 2D (Peppa Pig style)', 'Preschool 3D (Cocomelon style)', 'Claymation', 'Bright flat cartoon'];
+const languageOptions = ['English', 'Spanish', 'Hindi', 'French', 'Mandarin'];
 
 function Pill({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
