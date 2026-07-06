@@ -8,6 +8,7 @@ import { storyRouter } from './routes/story.js';
 import { scenesRouter } from './routes/scenes.js';
 import { imagesRouter } from './routes/images.js';
 import { videosRouter } from './routes/videos.js';
+import { exportRouter } from './routes/export.js';
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use('/api/story', storyRouter);
 app.use('/api/scenes', scenesRouter);
 app.use('/api/images', imagesRouter);
 app.use('/api/videos', videosRouter);
+app.use('/api/export', exportRouter);
 
 const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   if (err instanceof ApiError) {

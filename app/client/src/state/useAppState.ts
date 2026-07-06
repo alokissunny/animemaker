@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  checkExportStatusApi,
   checkSceneVideoStatusApi,
   generateCharacterApi,
   generateSceneImagesApi,
   generateScenesApi,
   generateStoryApi,
   regenerateOneSceneApi,
+  startExportApi,
   startSceneVideoApi,
 } from '../api';
 import {
@@ -14,6 +16,7 @@ import {
   type Character,
   type CharacterDraft,
   type EpisodeConfig,
+  type ExportJobStatus,
   type FinalConfig,
   type Scene,
   type SceneImageState,
@@ -94,6 +97,10 @@ export function useAppState() {
     music: 'Warm acoustic (default)',
     format: 'YouTube Shorts',
   });
+  const [exportTransition, setExportTransition] = useState('fade');
+  const [exportStatus, setExportStatus] = useState<ExportJobStatus>('idle');
+  const [exportError, setExportError] = useState<string | null>(null);
+  const [exportId, setExportId] = useState<string | null>(null);
 
   const goLanding = useCallback(() => setScreen('landing'), []);
   const goLogin = useCallback(() => setScreen('login'), []);
@@ -351,6 +358,42 @@ export function useAppState() {
   const setMusic = useCallback((music: string) => setFinalConfig((c) => ({ ...c, music })), []);
   const setExportFormat = useCallback((format: string) => setFinalConfig((c) => ({ ...c, format })), []);
 
+  const startExport = useCallback(async () => {
+    const approvedClips = scenes
+      .filter((s) => videos[s.id]?.status === 'approved' && videos[s.id]?.videoId)
+      .map((s) => ({ videoId: videos[s.id].videoId as string }));
+    if (approvedClips.length === 0) return;
+    setExportStatus('processing');
+    setExportError(null);
+    setExportId(null);
+    try {
+      const { exportId: newExportId } = await startExportApi(approvedClips, exportTransition, finalConfig.format);
+      setExportId(newExportId);
+    } catch (err) {
+      setExportStatus('error');
+      setExportError(err instanceof Error ? err.message : 'Export failed to start.');
+    }
+  }, [scenes, videos, exportTransition, finalConfig.format]);
+
+  useEffect(() => {
+    if (exportStatus !== 'processing' || !exportId) return;
+    const interval = setInterval(() => {
+      checkExportStatusApi(exportId)
+        .then((res) => {
+          if (res.status === 'ready') setExportStatus('ready');
+          else if (res.status === 'error') {
+            setExportStatus('error');
+            setExportError(res.error || 'Export failed.');
+          }
+        })
+        .catch((err) => {
+          setExportStatus('error');
+          setExportError(err instanceof Error ? err.message : 'Checking export status failed.');
+        });
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [exportStatus, exportId]);
+
   const jumpToStep = useCallback((target: Screen) => {
     const currentIdx = FLOW_SCREENS.indexOf(screen);
     const targetIdx = FLOW_SCREENS.indexOf(target);
@@ -382,6 +425,7 @@ export function useAppState() {
     activeSceneIndex, setActiveSceneIndex, previewSceneId, setPreviewSceneId,
 
     finalConfig, goToFinal, toggleCaptions, setMusic, setExportFormat,
+    exportTransition, setExportTransition, exportStatus, exportError, exportId, startExport,
   };
 }
 

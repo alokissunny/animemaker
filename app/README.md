@@ -42,9 +42,18 @@ If a key is missing, the affected screen shows a clear inline error ("OPENAI_API
   curl -s "https://generativelanguage.googleapis.com/v1beta/models?key=YOUR_GOOGLE_API_KEY" | grep -i veo
   ```
 
+## Final export: transitions & full-episode video
+
+The Final screen can stitch every **approved** scene clip into a single downloadable MP4:
+
+- **Transitions**: Cut, Fade, Dissolve, Wipe Left/Right, Slide Left/Right, Circle Crop, Zoom In — implemented with ffmpeg's `xfade` (video) and `acrossfade` (audio) filters chained across all clips (durations are probed per-clip so the crossfade timing lines up correctly even if Veo's actual output duration differs slightly from what was requested).
+- **Format-aware export**: picking Landscape video / Square video / YouTube Shorts / Instagram Reels / TikTok crops+scales the final export to that aspect ratio (16:9 native, 1:1 centered crop, or 9:16 centered crop) — same export format selector that used to be decorative now actually reformats the output.
+- Runs server-side via `ffmpeg-static` (a bundled ffmpeg binary — no system ffmpeg install needed, and it's portable to Render/most Linux hosts). "Cut" + landscape uses a fast stream-copy concat; every other combination re-encodes (libx264/aac), so it takes a bit longer.
+- Same start-job → poll-status → download pattern as video generation (`POST /api/export/generate`, `POST /api/export/status`, `GET /api/export/file/:id`), all in-memory (no persistence — an export disappears if the server restarts before you download it).
+- **Not included**: burning the background-music selection or captions into the exported file — those two controls on the Final screen remain preview-only for now (the "Download active clip" and per-scene downloads are unaffected).
+
 ## Known MVP boundaries
 
-- **Final export**: scene videos are generated and individually approved/downloadable, but stitching all approved clips into one exported file (with music/captions burned in) is not implemented — that's a separate video-processing pipeline (e.g. ffmpeg) beyond this MVP's scope. The Final screen lets you play/download each scene's clip and switch the active clip via the timeline strip.
 - **Auth**: Login/signup screens are stubbed (no real accounts) per the original design brief's scope decision.
 - **Regenerate scene**: uses a scoped OpenAI call that rewrites just that one scene (not the whole batch), keeping the rest of the story-to-scene continuity intact.
 - Generated character portraits are used as reference images when generating scene images that include that character, for visual consistency across a scene.

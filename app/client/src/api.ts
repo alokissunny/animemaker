@@ -122,4 +122,21 @@ export const checkSceneVideoStatusApi = (operationName: string) =>
 
 export const videoFileUrl = (videoId: string) => `${API_BASE}/api/videos/file/${videoId}`;
 
+export interface ExportStartResponse {
+  exportId: string;
+}
+
+export const startExportApi = (clips: { videoId: string }[], transition: string, format: string) =>
+  post<ExportStartResponse>('/api/export/generate', { clips, transition, format });
+
+export interface ExportStatusResponse {
+  status: 'processing' | 'ready' | 'error';
+  error?: string;
+}
+
+export const checkExportStatusApi = (exportId: string) =>
+  post<ExportStatusResponse>('/api/export/status', { exportId });
+
+export const exportFileUrl = (exportId: string) => `${API_BASE}/api/export/file/${exportId}`;
+
 export const dataUri = (base64: string, mimeType: string) => `data:${mimeType};base64,${base64}`;

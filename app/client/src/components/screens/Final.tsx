@@ -1,6 +1,8 @@
-import type { FinalConfig, Scene, SceneVideoState } from '../../types';
+import type { ExportJobStatus, FinalConfig, Scene, SceneVideoState } from '../../types';
+import { TRANSITION_OPTIONS } from '../../types';
 import { colors, fonts } from '../../theme';
-import { videoFileUrl } from '../../api';
+import { exportFileUrl, videoFileUrl } from '../../api';
+import { ErrorBanner, PrimaryButton, Spinner } from '../ui';
 
 const musicOptions = ['Warm acoustic (default)', 'Playful pizzicato', 'Dreamy synth', 'None'];
 const exportFormatList = ['YouTube Shorts', 'Instagram Reels', 'TikTok', 'Landscape video', 'Square video'];
@@ -15,6 +17,12 @@ export function Final({
   setExportFormat,
   activeSceneIndex,
   setActiveSceneIndex,
+  exportTransition,
+  setExportTransition,
+  exportStatus,
+  exportError,
+  exportId,
+  startExport,
 }: {
   scenes: Scene[];
   videos: Record<string, SceneVideoState>;
@@ -25,9 +33,17 @@ export function Final({
   setExportFormat: (f: string) => void;
   activeSceneIndex: number;
   setActiveSceneIndex: (i: number) => void;
+  exportTransition: string;
+  setExportTransition: (t: string) => void;
+  exportStatus: ExportJobStatus;
+  exportError: string | null;
+  exportId: string | null;
+  startExport: () => void;
 }) {
   const activeScene = scenes[activeSceneIndex];
   const activeVideo = activeScene ? videos[activeScene.id] : undefined;
+  const approvedClipCount = scenes.filter((s) => videos[s.id]?.status === 'approved').length;
+  const isExporting = exportStatus === 'processing';
 
   return (
     <div data-screen-label="Final Episode Preview" style={{ maxWidth: 1000, margin: '0 auto', padding: '32px 32px 90px' }}>
@@ -91,6 +107,32 @@ export function Final({
         </div>
       </div>
 
+      <div style={{ background: 'linear-gradient(180deg,rgba(255,255,255,0.045),rgba(255,255,255,0.015))', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 18, padding: 22, marginBottom: 20 }}>
+        <div style={{ fontFamily: fonts.display, fontWeight: 700, fontSize: 15, marginBottom: 4 }}>Scene transitions</div>
+        <div style={{ fontSize: 12.5, color: colors.muted, marginBottom: 14 }}>How the exported video cuts from one scene's clip to the next.</div>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          {TRANSITION_OPTIONS.map((t) => (
+            <button
+              key={t.value}
+              onClick={() => setExportTransition(t.value)}
+              style={{
+                border: exportTransition === t.value ? 'none' : '1px solid rgba(255,255,255,0.1)',
+                cursor: 'pointer',
+                padding: '10px 16px',
+                borderRadius: 12,
+                fontSize: 12.5,
+                fontWeight: 700,
+                fontFamily: fonts.display,
+                background: exportTransition === t.value ? 'linear-gradient(135deg,#8B5CF6,#EC4899)' : 'rgba(255,255,255,0.04)',
+                color: exportTransition === t.value ? '#fff' : colors.bodyText2,
+              }}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div style={{ background: 'linear-gradient(180deg,rgba(255,255,255,0.045),rgba(255,255,255,0.015))', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 18, padding: 22 }}>
         <div style={{ fontFamily: fonts.display, fontWeight: 700, fontSize: 15, marginBottom: 14 }}>Export settings</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 10, marginBottom: 20 }}>
@@ -115,13 +157,51 @@ export function Final({
             </button>
           ))}
         </div>
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-          <button
-            title="Full multi-scene export/stitching isn't wired up in this MVP — download individual approved clips below."
-            style={{ flex: 1, minWidth: 160, border: 'none', cursor: 'not-allowed', padding: 15, borderRadius: 13, background: 'linear-gradient(135deg,#8B5CF6,#EC4899)', color: '#fff', fontFamily: fonts.display, fontWeight: 700, fontSize: 14.5, opacity: 0.6 }}
-          >
-            Export episode
-          </button>
+
+        {exportStatus === 'error' && exportError && (
+          <div style={{ marginBottom: 16 }}>
+            <ErrorBanner message={exportError} onRetry={startExport} />
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'stretch' }}>
+          {exportStatus === 'ready' && exportId ? (
+            <a
+              href={exportFileUrl(exportId)}
+              download="anime-episode.mp4"
+              style={{
+                flex: 1,
+                minWidth: 160,
+                border: 'none',
+                cursor: 'pointer',
+                padding: 15,
+                borderRadius: 13,
+                background: 'linear-gradient(135deg,#34D399,#10B981)',
+                color: colors.greenDeep,
+                fontFamily: fonts.display,
+                fontWeight: 700,
+                fontSize: 14.5,
+                textAlign: 'center',
+                textDecoration: 'none',
+              }}
+            >
+              ✓ Download exported episode
+            </a>
+          ) : (
+            <PrimaryButton
+              onClick={startExport}
+              disabled={isExporting || approvedClipCount === 0}
+              style={{ flex: 1, minWidth: 160, fontSize: 14.5 }}
+            >
+              {isExporting ? (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
+                  <Spinner size={16} /> Exporting…
+                </span>
+              ) : (
+                'Export episode'
+              )}
+            </PrimaryButton>
+          )}
           <a
             href={activeVideo?.videoId ? videoFileUrl(activeVideo.videoId) : undefined}
             download={activeScene ? `scene-${activeScene.number}.mp4` : undefined}

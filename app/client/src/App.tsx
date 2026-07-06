@@ -126,6 +126,12 @@ function App() {
             setExportFormat={app.setExportFormat}
             activeSceneIndex={app.activeSceneIndex}
             setActiveSceneIndex={app.setActiveSceneIndex}
+            exportTransition={app.exportTransition}
+            setExportTransition={app.setExportTransition}
+            exportStatus={app.exportStatus}
+            exportError={app.exportError}
+            exportId={app.exportId}
+            startExport={app.startExport}
           />
         )}
       </div>

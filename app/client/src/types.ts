@@ -129,6 +129,20 @@ export interface FinalConfig {
   format: string;
 }
 
+export const TRANSITION_OPTIONS: { value: string; label: string }[] = [
+  { value: 'cut', label: 'Cut' },
+  { value: 'fade', label: 'Fade' },
+  { value: 'dissolve', label: 'Dissolve' },
+  { value: 'wipeleft', label: 'Wipe Left' },
+  { value: 'wiperight', label: 'Wipe Right' },
+  { value: 'slideleft', label: 'Slide Left' },
+  { value: 'slideright', label: 'Slide Right' },
+  { value: 'circlecrop', label: 'Circle Crop' },
+  { value: 'zoomin', label: 'Zoom In' },
+];
+
+export type ExportJobStatus = 'idle' | 'processing' | 'ready' | 'error';
+
 export interface Project {
   id: string;
   title: string;
