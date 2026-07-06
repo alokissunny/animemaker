@@ -15,10 +15,12 @@ export function TopNav({
   screen,
   onLogoClick,
   onStepClick,
+  saveStatus,
 }: {
   screen: Screen;
   onLogoClick: () => void;
   onStepClick: (screen: Screen) => void;
+  saveStatus?: 'idle' | 'saving' | 'saved';
 }) {
   const showStepper = FLOW_SCREENS.includes(screen);
   const isLoggedInNav = screen !== 'landing' && screen !== 'login';
@@ -114,6 +116,11 @@ export function TopNav({
         )}
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
+          {isLoggedInNav && saveStatus && saveStatus !== 'idle' && (
+            <div style={{ fontSize: 11, color: colors.mutedDim, whiteSpace: 'nowrap' }}>
+              {saveStatus === 'saving' ? 'Saving…' : 'Saved'}
+            </div>
+          )}
           {isLoggedInNav && (
             <div
               style={{

@@ -1,4 +1,4 @@
-import type { Character, CharacterDraft, EpisodeConfig, Scene, Story } from './types';
+import type { Character, CharacterDraft, EpisodeConfig, PersistedProject, Scene, Story } from './types';
 
 // In dev, Vite proxies /api to the server (see vite.config.ts) so this can stay empty.
 // In production the client and server are typically separate deployments, so set
@@ -140,3 +140,14 @@ export const checkExportStatusApi = (exportId: string) =>
 export const exportFileUrl = (exportId: string) => `${API_BASE}/api/export/file/${exportId}`;
 
 export const dataUri = (base64: string, mimeType: string) => `data:${mimeType};base64,${base64}`;
+
+export const loginApi = (email: string, password: string) =>
+  post<{ ok: boolean }>('/api/auth/login', { email, password });
+
+export const saveProjectApi = (project: PersistedProject) => post<{ ok: boolean }>('/api/project/save', project);
+
+export const loadProjectApi = () =>
+  fetch(`${API_BASE}/api/project/load`)
+    .then((res) => res.json())
+    .then((data) => data.project as PersistedProject | null)
+    .catch(() => null);

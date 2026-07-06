@@ -6,7 +6,9 @@ import {
   generateSceneImagesApi,
   generateScenesApi,
   generateStoryApi,
+  loadProjectApi,
   regenerateOneSceneApi,
+  saveProjectApi,
   startExportApi,
   startSceneVideoApi,
 } from '../api';
@@ -18,6 +20,7 @@ import {
   type EpisodeConfig,
   type ExportJobStatus,
   type FinalConfig,
+  type PersistedProject,
   type Scene,
   type SceneImageState,
   type SceneVideoState,
@@ -400,6 +403,45 @@ export function useAppState() {
     if (targetIdx <= currentIdx) setScreen(target);
   }, [screen]);
 
+  const [savedProject, setSavedProject] = useState<PersistedProject | null>(null);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+
+  // Load whatever project was last saved (if any) once on mount, so the Dashboard can
+  // offer to resume it. This only fetches — it doesn't touch current in-memory state.
+  useEffect(() => {
+    loadProjectApi().then((project) => {
+      if (project) setSavedProject(project);
+    });
+  }, []);
+
+  const resumeSavedProject = useCallback(() => {
+    if (!savedProject) return;
+    setCharacters(savedProject.characters);
+    setEpisodeConfig(savedProject.episodeConfig);
+    setStory(savedProject.story);
+    setStoryGenStatus(savedProject.story ? 'ready' : 'idle');
+    setScenes(savedProject.scenes);
+    setScenesGenStatus(savedProject.scenes.length > 0 ? 'ready' : 'idle');
+    setImages(savedProject.images);
+    setVideos(savedProject.videos);
+    setFinalConfig(savedProject.finalConfig);
+    setScreen(savedProject.screen);
+  }, [savedProject]);
+
+  // Autosave: debounced so we're not writing on every keystroke, and skipped until
+  // there's actually a project worth saving (a character or scene exists).
+  const hasSaveableContent = characters.length > 0 || scenes.length > 0;
+  useEffect(() => {
+    if (!hasSaveableContent) return;
+    setSaveStatus('saving');
+    const timeout = setTimeout(() => {
+      saveProjectApi({ screen, characters, episodeConfig, story, scenes, images, videos, finalConfig })
+        .then(() => setSaveStatus('saved'))
+        .catch(() => setSaveStatus('idle'));
+    }, 1500);
+    return () => clearTimeout(timeout);
+  }, [hasSaveableContent, screen, characters, episodeConfig, story, scenes, images, videos, finalConfig]);
+
   return {
     screen, setScreen, jumpToStep,
     authTab, setAuthTab,
@@ -426,6 +468,8 @@ export function useAppState() {
 
     finalConfig, goToFinal, toggleCaptions, setMusic, setExportFormat,
     exportTransition, setExportTransition, exportStatus, exportError, exportId, startExport,
+
+    savedProject, resumeSavedProject, saveStatus,
   };
 }
 

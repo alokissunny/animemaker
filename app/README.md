@@ -52,9 +52,14 @@ The Final screen can stitch every **approved** scene clip into a single download
 - Same start-job → poll-status → download pattern as video generation (`POST /api/export/generate`, `POST /api/export/status`, `GET /api/export/file/:id`), all in-memory (no persistence — an export disappears if the server restarts before you download it).
 - **Not included**: burning the background-music selection or captions into the exported file — those two controls on the Final screen remain preview-only for now (the "Download active clip" and per-scene downloads are unaffected).
 
-## Known MVP boundaries
+## Login & saving your project
 
-- **Auth**: Login/signup screens are stubbed (no real accounts) per the original design brief's scope decision.
+- **Login** checks against a single fixed test credential (no real accounts): **`demo@nova.app` / `anime123`** by default, shown right on the login screen. Override it via `TEST_LOGIN_EMAIL` / `TEST_LOGIN_PASSWORD` in `server/.env`. The Sign up tab remains a stub, unchanged from before.
+- **Autosave**: once you have at least one character or scene, the app autosaves your whole in-progress episode (characters with portraits, episode config, story, scenes, image variants, video references, final settings) to the server a couple seconds after each change — watch for the "Saving…" / "Saved" indicator next to the avatar in the top right.
+- **Resume**: the Dashboard shows a "Resume in-progress episode" banner whenever a saved project exists — clicking it restores everything and jumps back to exactly where you left off (even after closing the tab or restarting the server).
+- This is single-slot (one in-progress episode at a time, matching the app's single continuous flow) and stored as `server/data/project.json` plus `server/data/videos/*.mp4`, not a database — fine for local/dev use. **On most hosting platforms this directory must live on a persistent volume to survive restarts/redeploys** (see Deploying below); Render's default free-tier disk is ephemeral.
+
+## Known MVP boundaries
 - **Regenerate scene**: uses a scoped OpenAI call that rewrites just that one scene (not the whole batch), keeping the rest of the story-to-scene continuity intact.
 - Generated character portraits are used as reference images when generating scene images that include that character, for visual consistency across a scene.
 - **Veo's safety filters may reject video generation for scenes depicting children** ("Your prompt conflicted with our safety policies..."). This is Google's policy, not a bug — the video request still completes (`done: true`) with a clear `error` message and a **Retry** button rather than hanging. If you hit this often, consider aging characters up (e.g. "Teen" or "Young adult") for the video-generation step, or trying a different framing/motion prompt.
@@ -81,3 +86,5 @@ To deploy:
 5. On `anime-maker-client`, set `VITE_API_BASE_URL` to that URL, then trigger a manual redeploy — Vite bakes env vars in at build time, so this won't take effect until the next build.
 
 The client and server are on different origins in this setup; the server already sends permissive CORS headers (`cors()` with defaults), which is fine since there's no cookie-based auth to protect.
+
+**Persistent disk**: `anime-maker-server` writes saved projects and generated videos to `DATA_DIR` (`server/data` by default) on local disk. Render's web services get an ephemeral filesystem — it survives simple restarts but is wiped on every redeploy. To keep saved episodes across redeploys, add a [Render Disk](https://render.com/docs/disks) to `anime-maker-server` (e.g. mounted at `/data`) and set `DATA_DIR=/data` in its env vars. Without a disk, autosave/resume still works fine between visits until the next redeploy.

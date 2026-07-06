@@ -46,7 +46,7 @@ videosRouter.post(
 videosRouter.get(
   '/file/:videoId',
   asyncHandler(async (req, res) => {
-    const cached = getCachedVideo(req.params.videoId);
+    const cached = await getCachedVideo(req.params.videoId);
     if (!cached) {
       res.status(404).json({ error: 'Video not found or has expired.', code: 'not_found' });
       return;

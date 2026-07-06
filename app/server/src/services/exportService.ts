@@ -123,7 +123,7 @@ async function processExport(
   try {
     const inputPaths: string[] = [];
     for (let i = 0; i < clips.length; i++) {
-      const cached = getCachedVideo(clips[i].videoId);
+      const cached = await getCachedVideo(clips[i].videoId);
       if (!cached) {
         throw new Error(`Clip ${i + 1} is no longer available on the server — please regenerate it and export again.`);
       }

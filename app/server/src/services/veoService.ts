@@ -19,6 +19,18 @@ interface CachedVideo {
 }
 const videoCache = new Map<string, CachedVideo>();
 
+// The in-memory cache alone doesn't survive a server restart, which would break the
+// "resume next session" flow for any scene video generated before the restart. Mirror
+// each finished video to disk so it can still be served (and re-warmed into memory)
+// afterward.
+const VIDEOS_DIR = path.join(config.dataDir, 'videos');
+
+async function persistVideoToDisk(videoId: string, buffer: Buffer, mimeType: string): Promise<void> {
+  await fs.mkdir(VIDEOS_DIR, { recursive: true });
+  await fs.writeFile(path.join(VIDEOS_DIR, `${videoId}.mp4`), buffer);
+  await fs.writeFile(path.join(VIDEOS_DIR, `${videoId}.json`), JSON.stringify({ mimeType }));
+}
+
 // The SDK's operation objects carry an internal _fromAPIResponse method needed to poll
 // status — a plain `{ name }` object reconstructed from just the name string does NOT
 // have it and throws. So we keep the real operation instances around in memory, keyed
@@ -90,15 +102,15 @@ export async function checkVideoStatus(
 
   const videoId = randomUUID();
   const mimeType = generatedVideo.mimeType || 'video/mp4';
+  let buffer: Buffer;
 
   if (generatedVideo.videoBytes) {
-    videoCache.set(videoId, { buffer: Buffer.from(generatedVideo.videoBytes, 'base64'), mimeType });
+    buffer = Buffer.from(generatedVideo.videoBytes, 'base64');
   } else {
     const tmpPath = path.join(os.tmpdir(), `anime-maker-${videoId}.mp4`);
     try {
       await ai.files.download({ file: generatedVideo, downloadPath: tmpPath });
-      const buffer = await fs.readFile(tmpPath);
-      videoCache.set(videoId, { buffer, mimeType });
+      buffer = await fs.readFile(tmpPath);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Unknown download error';
       return { done: true, error: `Failed to download the finished video: ${message}` };
@@ -107,10 +119,24 @@ export async function checkVideoStatus(
     }
   }
 
+  videoCache.set(videoId, { buffer, mimeType });
+  await persistVideoToDisk(videoId, buffer, mimeType);
+
   operationCache.delete(operationName);
   return { done: true, videoId };
 }
 
-export function getCachedVideo(videoId: string): CachedVideo | undefined {
-  return videoCache.get(videoId);
+export async function getCachedVideo(videoId: string): Promise<CachedVideo | undefined> {
+  const inMemory = videoCache.get(videoId);
+  if (inMemory) return inMemory;
+  try {
+    const buffer = await fs.readFile(path.join(VIDEOS_DIR, `${videoId}.mp4`));
+    const metaRaw = await fs.readFile(path.join(VIDEOS_DIR, `${videoId}.json`), 'utf-8').catch(() => '{}');
+    const meta = JSON.parse(metaRaw) as { mimeType?: string };
+    const cached: CachedVideo = { buffer, mimeType: meta.mimeType || 'video/mp4' };
+    videoCache.set(videoId, cached);
+    return cached;
+  } catch {
+    return undefined;
+  }
 }

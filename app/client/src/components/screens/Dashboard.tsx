@@ -1,14 +1,28 @@
-import type { Project } from '../../types';
+import type { PersistedProject, Project } from '../../types';
 import { fonts } from '../../theme';
+
+const SCREEN_LABELS: Record<string, string> = {
+  characters: 'Characters',
+  episodeSetup: 'Episode Setup',
+  story: 'Story',
+  scenes: 'Scenes',
+  images: 'Images',
+  videos: 'Videos',
+  final: 'Export',
+};
 
 export function Dashboard({
   projects,
   onStartNew,
   onOpenProject,
+  savedProject,
+  onResumeSaved,
 }: {
   projects: Project[];
   onStartNew: () => void;
   onOpenProject: (id: string) => void;
+  savedProject: PersistedProject | null;
+  onResumeSaved: () => void;
 }) {
   return (
     <div data-screen-label="Dashboard" style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 32px 80px' }}>
@@ -24,6 +38,52 @@ export function Dashboard({
           <span style={{ fontSize: 17, lineHeight: 1 }}>+</span> Create New Anime Episode
         </button>
       </div>
+
+      {savedProject && (
+        <div
+          onClick={onResumeSaved}
+          style={{
+            cursor: 'pointer',
+            marginBottom: 28,
+            padding: '20px 22px',
+            borderRadius: 18,
+            background: 'linear-gradient(135deg,rgba(139,92,246,0.16),rgba(236,72,153,0.1))',
+            border: '1px solid rgba(139,92,246,0.35)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 16,
+            flexWrap: 'wrap',
+          }}
+        >
+          <div>
+            <div style={{ fontFamily: fonts.display, fontWeight: 700, fontSize: 15.5, marginBottom: 4 }}>
+              Resume in-progress episode
+            </div>
+            <div style={{ fontSize: 12.5, color: '#C9C6DA' }}>
+              {savedProject.characters.length} character{savedProject.characters.length === 1 ? '' : 's'}
+              {savedProject.scenes.length > 0 ? ` · ${savedProject.scenes.length} scenes` : ''}
+              {' · '}Last at {SCREEN_LABELS[savedProject.screen] || savedProject.screen}
+              {savedProject.updatedAt ? ` · saved ${new Date(savedProject.updatedAt).toLocaleString()}` : ''}
+            </div>
+          </div>
+          <div
+            style={{
+              flexShrink: 0,
+              padding: '10px 20px',
+              borderRadius: 12,
+              background: 'linear-gradient(135deg,#8B5CF6,#EC4899)',
+              color: '#fff',
+              fontFamily: fonts.display,
+              fontWeight: 700,
+              fontSize: 13,
+            }}
+          >
+            Resume →
+          </div>
+        </div>
+      )}
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 20 }}>
         {projects.map((p) => (
           <div

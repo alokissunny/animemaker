@@ -143,6 +143,18 @@ export const TRANSITION_OPTIONS: { value: string; label: string }[] = [
 
 export type ExportJobStatus = 'idle' | 'processing' | 'ready' | 'error';
 
+export interface PersistedProject {
+  screen: Screen;
+  characters: Character[];
+  episodeConfig: EpisodeConfig;
+  story: Story | null;
+  scenes: Scene[];
+  images: Record<string, SceneImageState>;
+  videos: Record<string, SceneVideoState>;
+  finalConfig: FinalConfig;
+  updatedAt?: string;
+}
+
 export interface Project {
   id: string;
   title: string;

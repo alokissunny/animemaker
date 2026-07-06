@@ -21,7 +21,7 @@ function App() {
       <div style={{ position: 'fixed', top: '-10%', left: '-10%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle,rgba(139,92,246,0.20),transparent 70%)', filter: 'blur(20px)', animation: 'floatBlob 14s ease-in-out infinite', pointerEvents: 'none', zIndex: 0 }} />
       <div style={{ position: 'fixed', bottom: '-10%', right: '-5%', width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle,rgba(236,72,153,0.16),transparent 70%)', filter: 'blur(20px)', animation: 'floatBlob 18s ease-in-out infinite reverse', pointerEvents: 'none', zIndex: 0 }} />
 
-      <TopNav screen={app.screen} onLogoClick={app.goDashboard} onStepClick={app.jumpToStep} />
+      <TopNav screen={app.screen} onLogoClick={app.goDashboard} onStepClick={app.jumpToStep} saveStatus={app.saveStatus} />
 
       <div style={{ position: 'relative', zIndex: 1 }}>
         {app.screen === 'landing' && <Landing onGetStarted={app.goLogin} />}
@@ -29,7 +29,13 @@ function App() {
         {app.screen === 'login' && <Login authTab={app.authTab} setAuthTab={app.setAuthTab} onSubmit={app.goDashboard} />}
 
         {app.screen === 'dashboard' && (
-          <Dashboard projects={app.projects} onStartNew={app.startNewEpisode} onOpenProject={app.openProject} />
+          <Dashboard
+            projects={app.projects}
+            onStartNew={app.startNewEpisode}
+            onOpenProject={app.openProject}
+            savedProject={app.savedProject}
+            onResumeSaved={app.resumeSavedProject}
+          />
         )}
 
         {app.screen === 'projectDetail' && (
