@@ -72,8 +72,8 @@ export function Images({
                   <ErrorBanner message={im.error || 'Image generation failed.'} onRetry={() => regenerateImage(sc.id)} />
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 16 }}>
-                  {(im.variants.length ? im.variants : [0, 1, 2, 3].map((id) => ({ id, imageBase64: '', mimeType: '' }))).map((v) => (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 12, marginBottom: 16 }}>
+                  {(im.variants.length ? im.variants : [0, 1].map((id) => ({ id, imageBase64: '', mimeType: '' }))).map((v) => (
                     <div
                       key={v.id}
                       onClick={() => v.imageBase64 && selectImageVariant(sc.id, v.id)}

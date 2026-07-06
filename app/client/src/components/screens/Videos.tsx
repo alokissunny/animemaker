@@ -77,7 +77,7 @@ export function Videos({
 
                 {vd.status === 'error' && (
                   <div style={{ marginBottom: 12 }}>
-                    <ErrorBanner message={vd.error || 'Video generation failed.'} />
+                    <ErrorBanner message={vd.error || 'Video generation failed.'} onRetry={() => regenerateVideo(sc.id)} />
                   </div>
                 )}
 

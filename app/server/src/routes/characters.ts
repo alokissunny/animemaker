@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { asyncHandler } from '../asyncHandler.js';
 import { generateCharacterProfile, type CharacterDraft } from '../services/openaiService.js';
 import { generateCharacterImage } from '../services/geminiService.js';
+import { buildCharacterDescriptor } from '../services/characterDescriptor.js';
 
 export const charactersRouter = Router();
 
@@ -15,11 +16,14 @@ charactersRouter.post(
     }
 
     const profile = await generateCharacterProfile(draft);
-    const image = await generateCharacterImage(profile.imagePrompt);
+    // The deterministic descriptor goes first so age/gender/appearance are anchored
+    // regardless of how the LLM's freeform imagePrompt phrases things.
+    const finalImagePrompt = `${buildCharacterDescriptor(draft)} ${profile.imagePrompt} Portrait framing, single character, plain background.`;
+    const image = await generateCharacterImage(finalImagePrompt);
 
     res.json({
       bio: profile.bio,
-      imagePrompt: profile.imagePrompt,
+      imagePrompt: finalImagePrompt,
       imageBase64: image.imageBase64,
       mimeType: image.mimeType,
     });

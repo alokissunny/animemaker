@@ -40,7 +40,13 @@ function pickCharacterRefs(scene: { charactersInvolved: string }, characters: Ch
   const names = scene.charactersInvolved.split(',').map((n) => n.trim().toLowerCase());
   const matched = characters.filter((c) => names.includes(c.name.toLowerCase()));
   const refs = (matched.length ? matched : characters).slice(0, 2);
-  return refs.map((c) => ({ imageBase64: c.imageBase64, mimeType: c.mimeType }));
+  return refs.map((c) => ({
+    imageBase64: c.imageBase64,
+    mimeType: c.mimeType,
+    name: c.name,
+    ageGroup: c.ageGroup,
+    gender: c.gender,
+  }));
 }
 
 export function useAppState() {
@@ -256,8 +262,7 @@ export function useAppState() {
   const goToImages = useCallback(() => {
     setScreen('images');
     scenes.forEach((scene) => void generateImageForScene(scene));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scenes]);
+  }, [scenes, generateImageForScene]);
 
   const selectImageVariant = useCallback((sceneId: string, variantId: number) => {
     setImages((prev) => ({ ...prev, [sceneId]: { ...prev[sceneId], status: 'ready', selectedVariant: variantId } }));
@@ -301,8 +306,7 @@ export function useAppState() {
   const goToVideos = useCallback(() => {
     setScreen('videos');
     scenes.forEach((scene) => void startVideoForScene(scene));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scenes]);
+  }, [scenes, startVideoForScene]);
 
   const approveVideo = useCallback((sceneId: string) => {
     setVideos((prev) => ({ ...prev, [sceneId]: { ...prev[sceneId], status: 'approved' } }));
@@ -321,14 +325,21 @@ export function useAppState() {
     const interval = setInterval(() => {
       Object.entries(videosRef.current).forEach(([sceneId, v]) => {
         if (v.status === 'generating' && v.operationName && !v.videoId) {
-          void checkSceneVideoStatusApi(v.operationName).then((status) => {
-            if (!status.done) return;
-            if (status.error) {
-              setVideos((prev) => ({ ...prev, [sceneId]: { status: 'error', error: status.error } }));
-            } else if (status.videoId) {
-              setVideos((prev) => ({ ...prev, [sceneId]: { status: 'ready', videoId: status.videoId } }));
-            }
-          });
+          checkSceneVideoStatusApi(v.operationName)
+            .then((status) => {
+              if (!status.done) return;
+              if (status.error) {
+                setVideos((prev) => ({ ...prev, [sceneId]: { status: 'error', error: status.error } }));
+              } else if (status.videoId) {
+                setVideos((prev) => ({ ...prev, [sceneId]: { status: 'ready', videoId: status.videoId } }));
+              }
+            })
+            .catch((err) => {
+              setVideos((prev) => ({
+                ...prev,
+                [sceneId]: { status: 'error', error: err instanceof Error ? err.message : 'Checking video status failed.' },
+              }));
+            });
         }
       });
     }, 3000);

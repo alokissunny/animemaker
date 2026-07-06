@@ -58,7 +58,11 @@ export async function generateCharacterProfile(draft: CharacterDraft): Promise<C
   const system =
     'You are the character-generation model inside an anime production app. ' +
     'Given structured character choices, write (1) a punchy one-sentence bio for the creator ' +
-    'and (2) a detailed, vivid text-to-image prompt describing the character portrait for an anime-style image generator. ' +
+    'and (2) a vivid text-to-image prompt describing the character portrait for an anime-style image generator, ' +
+    'covering pose, expression, and personality-driven detail (not just a restatement of the fields). ' +
+    'The exact age group and gender are handled separately and will be prepended to your prompt verbatim, ' +
+    'so do not contradict them — e.g. never age the character up or down from the given age group, ' +
+    'and do not change their stated gender presentation. ' +
     'Respond as JSON: {"bio": string, "imagePrompt": string}.';
   const user = JSON.stringify(draft);
   return askForJson<CharacterProfile>(system, user);

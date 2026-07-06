@@ -19,6 +19,12 @@ export interface ImageReference {
   mimeType: string;
 }
 
+export interface SceneCharacterRef extends ImageReference {
+  name: string;
+  ageGroup: string;
+  gender: string;
+}
+
 async function generateOneImage(prompt: string, references: ImageReference[]): Promise<GeneratedImage> {
   const ai = getClient();
   const parts = [
@@ -53,7 +59,7 @@ export async function generateCharacterImage(prompt: string): Promise<GeneratedI
 export async function generateSceneImageVariants(
   prompt: string,
   references: ImageReference[],
-  variantCount = 4
+  variantCount = 2
 ): Promise<GeneratedImage[]> {
   const attempts = await Promise.allSettled(
     Array.from({ length: variantCount }, () => generateOneImage(prompt, references))

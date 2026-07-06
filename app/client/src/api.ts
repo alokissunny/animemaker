@@ -86,12 +86,16 @@ export interface ImageGenerateResponse {
   variants: { id: number; imageBase64: string; mimeType: string }[];
 }
 
-export const generateSceneImagesApi = (
-  sceneId: string,
-  imagePrompt: string,
-  characterRefs: { imageBase64: string; mimeType: string }[]
-) =>
-  post<ImageGenerateResponse>('/api/images/generate', { sceneId, imagePrompt, characterRefs, variantCount: 4 });
+export interface SceneCharacterRef {
+  imageBase64: string;
+  mimeType: string;
+  name: string;
+  ageGroup: string;
+  gender: string;
+}
+
+export const generateSceneImagesApi = (sceneId: string, imagePrompt: string, characterRefs: SceneCharacterRef[]) =>
+  post<ImageGenerateResponse>('/api/images/generate', { sceneId, imagePrompt, characterRefs, variantCount: 2 });
 
 export interface VideoStartResponse {
   sceneId: string;

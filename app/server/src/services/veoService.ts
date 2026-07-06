@@ -19,6 +19,12 @@ interface CachedVideo {
 }
 const videoCache = new Map<string, CachedVideo>();
 
+// The SDK's operation objects carry an internal _fromAPIResponse method needed to poll
+// status — a plain `{ name }` object reconstructed from just the name string does NOT
+// have it and throws. So we keep the real operation instances around in memory, keyed
+// by name, and always poll using the last instance we have for that operation.
+const operationCache = new Map<string, GenerateVideosOperation>();
+
 export async function startVideoGeneration(params: {
   prompt: string;
   imageBase64: string;
@@ -45,6 +51,7 @@ export async function startVideoGeneration(params: {
   if (!operation.name) {
     throw new ApiError(502, 'veo_no_operation', 'Veo did not return an operation to track.');
   }
+  operationCache.set(operation.name, operation);
   return { operationName: operation.name };
 }
 
@@ -52,15 +59,21 @@ export async function checkVideoStatus(
   operationName: string
 ): Promise<{ done: boolean; videoId?: string; error?: string }> {
   const ai = getClient();
+  const previous = operationCache.get(operationName);
+  if (!previous) {
+    return {
+      done: true,
+      error: 'Lost track of this video generation job (the server may have restarted). Please regenerate the video.',
+    };
+  }
   let operation: GenerateVideosOperation;
   try {
-    operation = await ai.operations.getVideosOperation({
-      operation: { name: operationName } as GenerateVideosOperation,
-    });
+    operation = await ai.operations.getVideosOperation({ operation: previous });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown Veo error';
     throw new ApiError(502, 'veo_poll_failed', `Checking Veo status failed: ${message}`);
   }
+  operationCache.set(operationName, operation);
   if (!operation.done) return { done: false };
   if (operation.error) {
     const message = typeof operation.error.message === 'string' ? operation.error.message : 'Veo reported a generation error.';
@@ -90,6 +103,7 @@ export async function checkVideoStatus(
     }
   }
 
+  operationCache.delete(operationName);
   return { done: true, videoId };
 }
 
