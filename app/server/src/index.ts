@@ -48,6 +48,14 @@ app.use(errorHandler);
 app.listen(config.port, () => {
   console.log(`Anime Maker server listening on http://localhost:${config.port}`);
   if (!hasOpenAI()) console.warn('  ! OPENAI_API_KEY is not set — text generation will fail.');
-  if (!hasGoogle()) console.warn('  ! GOOGLE_API_KEY is not set — image/video generation will fail.');
+  if (!hasGoogle()) {
+    console.warn(
+      config.googleUseVertexAI
+        ? '  ! GOOGLE_GENAI_USE_VERTEXAI is set but GOOGLE_CLOUD_PROJECT is not — image/video generation will fail.'
+        : '  ! GOOGLE_API_KEY is not set — image/video generation will fail.'
+    );
+  } else if (config.googleUseVertexAI) {
+    console.log(`  Using Vertex AI (project: ${config.googleCloudProject}, location: ${config.googleCloudLocation})`);
+  }
   console.log(`  Test login: ${config.testLoginEmail} / ${config.testLoginPassword}`);
 });

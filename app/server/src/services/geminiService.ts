@@ -1,13 +1,7 @@
-import { GoogleGenAI, Modality, createUserContent, createPartFromBase64 } from '@google/genai';
-import { config, hasGoogle } from '../config.js';
-import { ApiError, missingKeyError } from '../apiError.js';
-
-let client: GoogleGenAI | null = null;
-const getClient = () => {
-  if (!hasGoogle()) throw missingKeyError('GOOGLE_API_KEY');
-  if (!client) client = new GoogleGenAI({ apiKey: config.googleApiKey });
-  return client;
-};
+import { Modality, createUserContent, createPartFromBase64 } from '@google/genai';
+import { config } from '../config.js';
+import { ApiError } from '../apiError.js';
+import { getGoogleClient } from './googleClient.js';
 
 export interface GeneratedImage {
   imageBase64: string;
@@ -26,7 +20,7 @@ export interface SceneCharacterRef extends ImageReference {
 }
 
 async function generateOneImage(prompt: string, references: ImageReference[]): Promise<GeneratedImage> {
-  const ai = getClient();
+  const ai = getGoogleClient();
   const parts = [
     ...references.map((ref) => createPartFromBase64(ref.imageBase64, ref.mimeType)),
     prompt,

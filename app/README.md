@@ -41,6 +41,27 @@ If a key is missing, the affected screen shows a clear inline error ("OPENAI_API
   ```bash
   curl -s "https://generativelanguage.googleapis.com/v1beta/models?key=YOUR_GOOGLE_API_KEY" | grep -i veo
   ```
+- **Getting a `429 RESOURCE_EXHAUSTED` / quota error, especially with Google Cloud credits?** The Gemini Developer API key (`GOOGLE_API_KEY`, from AI Studio) has its own quota that's separate from a GCP project's Cloud credits — credits don't apply to it. Switch to Vertex AI (below) to bill against the project the credits are on.
+
+### Using Vertex AI instead of a Gemini API key
+
+Set these in `server/.env` instead of `GOOGLE_API_KEY`:
+
+```bash
+GOOGLE_GENAI_USE_VERTEXAI=true
+GOOGLE_CLOUD_PROJECT=your-gcp-project-id
+GOOGLE_CLOUD_LOCATION=us-central1
+# pick one auth method:
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json
+# — or, if you can't mount a file (e.g. some PaaS hosts) —
+GOOGLE_APPLICATION_CREDENTIALS_JSON='{"type":"service_account",...}'
+```
+
+Notes:
+- The service account needs the **Vertex AI User** role on that project, and the project needs the Vertex AI API enabled (and billing/credits attached).
+- No key file handy? Run `gcloud auth application-default login` locally instead — it sets up ADC without any of the above env vars.
+- Vertex AI model availability can differ from the Developer API's — if `GEMINI_IMAGE_MODEL` or `VEO_MODEL` 404 under Vertex, check the [Vertex AI Model Garden](https://console.cloud.google.com/vertex-ai/model-garden) for the exact model IDs available to your project.
+- Switching this on affects **both** Nano Banana image generation and Veo video generation (they share one client); OpenAI/ChatGPT is unaffected either way.
 
 ## Final export: transitions & full-episode video
 

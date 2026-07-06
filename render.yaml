@@ -17,6 +17,17 @@ services:
         value: gemini-2.5-flash-image
       - key: VEO_MODEL
         value: veo-3.1-generate-preview
+      # Optional: use Vertex AI (billed to GCP Cloud credits) instead of GOOGLE_API_KEY
+      # above — see the README's "Using Vertex AI" section. Leave GOOGLE_GENAI_USE_VERTEXAI
+      # unset/false to keep using the Gemini Developer API key.
+      - key: GOOGLE_GENAI_USE_VERTEXAI
+        sync: false
+      - key: GOOGLE_CLOUD_PROJECT
+        sync: false
+      - key: GOOGLE_CLOUD_LOCATION
+        value: us-central1
+      - key: GOOGLE_APPLICATION_CREDENTIALS_JSON
+        sync: false
 
   - type: web
     name: anime-maker-client

@@ -2,16 +2,10 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { GoogleGenAI, type GenerateVideosOperation } from '@google/genai';
-import { config, hasGoogle } from '../config.js';
-import { ApiError, missingKeyError } from '../apiError.js';
-
-let client: GoogleGenAI | null = null;
-const getClient = () => {
-  if (!hasGoogle()) throw missingKeyError('GOOGLE_API_KEY');
-  if (!client) client = new GoogleGenAI({ apiKey: config.googleApiKey });
-  return client;
-};
+import { type GenerateVideosOperation } from '@google/genai';
+import { config } from '../config.js';
+import { ApiError } from '../apiError.js';
+import { getGoogleClient } from './googleClient.js';
 
 interface CachedVideo {
   buffer: Buffer;
@@ -43,7 +37,7 @@ export async function startVideoGeneration(params: {
   mimeType: string;
   durationSeconds?: number;
 }): Promise<{ operationName: string }> {
-  const ai = getClient();
+  const ai = getGoogleClient();
   let operation: GenerateVideosOperation;
   try {
     operation = await ai.models.generateVideos({
@@ -70,7 +64,7 @@ export async function startVideoGeneration(params: {
 export async function checkVideoStatus(
   operationName: string
 ): Promise<{ done: boolean; videoId?: string; error?: string }> {
-  const ai = getClient();
+  const ai = getGoogleClient();
   const previous = operationCache.get(operationName);
   if (!previous) {
     return {
