@@ -2,15 +2,25 @@
 
 A real implementation of the `Anime Maker MVP.dc.html` design exported from Claude Design (see `../README.md` and `../chats/chat1.md` for the design brief and decisions).
 
-Dark-mode SPA covering the full approval-based flow: Characters → Episode Setup → Story → Scenes → Images → Videos → Export, plus lightly-stubbed Landing/Login/Dashboard/Project Detail screens.
+Dark-mode SPA covering the full approval-based flow: Characters → Episode Setup → Story → Scenes → Videos → Export, plus lightly-stubbed Landing/Login/Dashboard/Project Detail screens.
 
 Unlike the original clickable prototype (which faked all "AI generation" with `setTimeout`), this build wires up real AI calls:
 
 | Step | Model |
 | --- | --- |
 | Character bio + image prompt, story, scene breakdown, captions | OpenAI (ChatGPT) |
-| Character portraits & scene images | Google Gemini "Nano Banana" (`gemini-2.5-flash-image`) |
-| Scene videos (image → motion clip) | Google Veo (`veo-3.1-generate-preview` by default) |
+| Character portraits | Google Gemini "Nano Banana" (`gemini-2.5-flash-image`) |
+| Scene videos (image → motion clip, chained scene to scene) | Google Veo (`veo-3.1-generate-preview` by default) |
+
+## Scene videos: sequential, chained continuity
+
+There's no standalone "scene images" step — scenes go straight from the breakdown to video generation:
+
+- **Scene 1** starts from a portrait of whichever finalized character is named in that scene.
+- **Every scene after that** starts from the *actual last frame* of the previous scene's approved video (extracted server-side with ffmpeg), not a freshly generated image — so the episode reads as one continuous shot instead of jump-cutting between unrelated stills.
+- Scenes generate **one at a time**, gated on approval: scene 2 doesn't start until you approve scene 1, and so on. The Videos screen shows not-yet-reached scenes as "Queued" with no actions, since there's nothing to do until their turn comes.
+- Regenerating a scene reuses the same reference (the same character portrait for scene 1, or the same previous-scene last frame for later scenes) — regenerating an *earlier* scene after later ones already exist won't cascade and regenerate those later ones too (a known limitation, not automatic).
+- New endpoint backing this: `GET /api/videos/last-frame/:videoId` (uses the same `ffmpeg-static` binary as the export pipeline).
 
 ## Structure
 
@@ -76,13 +86,13 @@ The Final screen can stitch every **approved** scene clip into a single download
 ## Login & saving your project
 
 - **Login** checks against a single fixed test credential (no real accounts): **`demo@nova.app` / `anime123`** by default, shown right on the login screen. Override it via `TEST_LOGIN_EMAIL` / `TEST_LOGIN_PASSWORD` in `server/.env`. The Sign up tab remains a stub, unchanged from before.
-- **Autosave**: once you have at least one character or scene, the app autosaves your whole in-progress episode (characters with portraits, episode config, story, scenes, image variants, video references, final settings) to the server a couple seconds after each change — watch for the "Saving…" / "Saved" indicator next to the avatar in the top right.
+- **Autosave**: once you have at least one character or scene, the app autosaves your whole in-progress episode (characters with portraits, episode config, story, scenes, video references, final settings) to the server a couple seconds after each change — watch for the "Saving…" / "Saved" indicator next to the avatar in the top right.
 - **Resume**: the Dashboard shows a "Resume in-progress episode" banner whenever a saved project exists — clicking it restores everything and jumps back to exactly where you left off (even after closing the tab or restarting the server).
 - This is single-slot (one in-progress episode at a time, matching the app's single continuous flow) and stored as `server/data/project.json` plus `server/data/videos/*.mp4`, not a database — fine for local/dev use. **On most hosting platforms this directory must live on a persistent volume to survive restarts/redeploys** (see Deploying below); Render's default free-tier disk is ephemeral.
 
 ## Known MVP boundaries
-- **Regenerate scene**: uses a scoped OpenAI call that rewrites just that one scene (not the whole batch), keeping the rest of the story-to-scene continuity intact.
-- Generated character portraits are used as reference images when generating scene images that include that character, for visual consistency across a scene.
+- **Regenerate scene** (breakdown step): uses a scoped OpenAI call that rewrites just that one scene (not the whole batch), keeping the rest of the story-to-scene continuity intact.
+- **Regenerate video**: recomputes the same reference image the scene originally used, but doesn't cascade to already-generated later scenes if you regenerate an earlier one (see "Scene videos" above).
 - **Veo's safety filters may reject video generation for scenes depicting children** ("Your prompt conflicted with our safety policies..."). This is Google's policy, not a bug — the video request still completes (`done: true`) with a clear `error` message and a **Retry** button rather than hanging. If you hit this often, consider aging characters up (e.g. "Teen" or "Young adult") for the video-generation step, or trying a different framing/motion prompt.
 
 ## Scripts (from `app/`)

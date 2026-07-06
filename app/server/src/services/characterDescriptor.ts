@@ -66,8 +66,3 @@ export function buildCharacterDescriptor(c: CharacterVisualFields): string {
   if (c.role) parts.push(`Story role: ${c.role}.`);
   return parts.join(' ');
 }
-
-/** A compact one-line version for referencing an already-designed character inside a scene prompt. */
-export function shortCharacterDescriptor(c: { name: string; ageGroup: string; gender: string }): string {
-  return `${c.name} (${genderPhrase(c.gender)}, ${ageGroupPhrase(c.ageGroup)})`;
-}

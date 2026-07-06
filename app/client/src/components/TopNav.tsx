@@ -6,7 +6,6 @@ const STEP_DEFS: { key: Screen; label: string }[] = [
   { key: 'episodeSetup', label: 'Episode Setup' },
   { key: 'story', label: 'Story' },
   { key: 'scenes', label: 'Scenes' },
-  { key: 'images', label: 'Images' },
   { key: 'videos', label: 'Videos' },
   { key: 'final', label: 'Export' },
 ];

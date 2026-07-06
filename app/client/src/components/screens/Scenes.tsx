@@ -1,5 +1,5 @@
 import type { Scene } from '../../types';
-import { colors, fonts, inputStyle } from '../../theme';
+import { colors, fonts } from '../../theme';
 import { ApproveButton, ErrorBanner, PrimaryButton, SecondaryButton, Spinner } from '../ui';
 
 export function Scenes({
@@ -9,10 +9,7 @@ export function Scenes({
   regeneratingSceneIds,
   approveScene,
   regenerateScene,
-  editingScenePromptId,
-  setEditingScenePromptId,
-  updateScenePrompt,
-  goToImages,
+  goToVideos,
 }: {
   scenes: Scene[];
   scenesGenStatus: 'idle' | 'generating' | 'ready' | 'error';
@@ -20,10 +17,7 @@ export function Scenes({
   regeneratingSceneIds: Record<string, boolean>;
   approveScene: (id: string) => void;
   regenerateScene: (id: string) => void;
-  editingScenePromptId: string | null;
-  setEditingScenePromptId: (id: string | null) => void;
-  updateScenePrompt: (id: string, prompt: string) => void;
-  goToImages: () => void;
+  goToVideos: () => void;
 }) {
   const approvedCount = scenes.filter((s) => s.approved).length;
   const allApproved = scenes.length > 0 && approvedCount === scenes.length;
@@ -33,7 +27,7 @@ export function Scenes({
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <div style={{ fontFamily: fonts.display, fontWeight: 800, fontSize: 26, marginBottom: 6 }}>Scene-by-scene breakdown</div>
-          <div style={{ fontSize: 14, color: colors.muted }}>Approve each scene — the scene breakdown model builds prompts, captions, and camera direction.</div>
+          <div style={{ fontSize: 14, color: colors.muted }}>Approve each scene — the scene breakdown model builds motion direction, captions, and camera direction.</div>
         </div>
         {scenes.length > 0 && (
           <div style={{ fontSize: 13, fontWeight: 700, color: colors.violetSoft, background: 'rgba(139,92,246,0.12)', padding: '8px 14px', borderRadius: 999 }}>
@@ -56,7 +50,6 @@ export function Scenes({
       <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
         {scenes.map((sc) => {
           const isRegenerating = !!regeneratingSceneIds[sc.id];
-          const isEditingPrompt = editingScenePromptId === sc.id;
           return (
             <div key={sc.id} style={{ background: 'linear-gradient(180deg,rgba(255,255,255,0.045),rgba(255,255,255,0.015))', border: `1px solid ${sc.approved ? 'rgba(52,211,153,0.4)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 18, padding: 24 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
@@ -96,25 +89,10 @@ export function Scenes({
                 <div style={{ fontSize: 13, color: '#F0EEFA', fontStyle: 'italic', lineHeight: 1.5 }}>“{sc.caption}”</div>
               </div>
 
-              {isEditingPrompt && (
-                <div style={{ marginBottom: 16 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: colors.mutedDim, marginBottom: 4 }}>IMAGE PROMPT</div>
-                  <textarea
-                    value={sc.imagePrompt}
-                    onChange={(e) => updateScenePrompt(sc.id, e.target.value)}
-                    rows={2}
-                    style={{ ...inputStyle, fontSize: 12.5, resize: 'vertical' }}
-                  />
-                </div>
-              )}
-
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                 <ApproveButton approved={sc.approved} label="Approve scene" onClick={() => approveScene(sc.id)} />
                 <SecondaryButton onClick={() => regenerateScene(sc.id)} disabled={isRegenerating} style={{ padding: '11px 16px', fontSize: 12.5 }}>
                   {isRegenerating ? 'Regenerating…' : 'Regenerate scene'}
-                </SecondaryButton>
-                <SecondaryButton onClick={() => setEditingScenePromptId(isEditingPrompt ? null : sc.id)} style={{ padding: '11px 16px', fontSize: 12.5 }}>
-                  {isEditingPrompt ? 'Done editing prompt' : 'Edit image prompt'}
                 </SecondaryButton>
               </div>
             </div>
@@ -124,8 +102,8 @@ export function Scenes({
 
       {allApproved && (
         <div style={{ marginTop: 28, textAlign: 'center' }}>
-          <PrimaryButton onClick={goToImages} style={{ padding: '16px 32px', fontSize: 15.5, borderRadius: 14 }}>
-            Generate Scene Images →
+          <PrimaryButton onClick={goToVideos} style={{ padding: '16px 32px', fontSize: 15.5, borderRadius: 14 }}>
+            Generate Scene Videos →
           </PrimaryButton>
         </div>
       )}

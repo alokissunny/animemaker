@@ -7,7 +7,6 @@ export type Screen =
   | 'episodeSetup'
   | 'story'
   | 'scenes'
-  | 'images'
   | 'videos'
   | 'final';
 
@@ -16,7 +15,6 @@ export const FLOW_SCREENS: Screen[] = [
   'episodeSetup',
   'story',
   'scenes',
-  'images',
   'videos',
   'final',
 ];
@@ -96,24 +94,8 @@ export interface Scene {
   mood: string;
   action: string;
   caption: string;
-  imagePrompt: string;
   videoPrompt: string;
   approved: boolean;
-}
-
-export interface ImageVariant {
-  id: number;
-  imageBase64: string;
-  mimeType: string;
-}
-
-export type GenerationStatus = 'idle' | 'generating' | 'ready' | 'approved' | 'error';
-
-export interface SceneImageState {
-  status: GenerationStatus;
-  variants: ImageVariant[];
-  selectedVariant: number | null;
-  error?: string;
 }
 
 export interface SceneVideoState {
@@ -149,7 +131,6 @@ export interface PersistedProject {
   episodeConfig: EpisodeConfig;
   story: Story | null;
   scenes: Scene[];
-  images: Record<string, SceneImageState>;
   videos: Record<string, SceneVideoState>;
   finalConfig: FinalConfig;
   updatedAt?: string;

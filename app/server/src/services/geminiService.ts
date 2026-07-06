@@ -13,12 +13,6 @@ export interface ImageReference {
   mimeType: string;
 }
 
-export interface SceneCharacterRef extends ImageReference {
-  name: string;
-  ageGroup: string;
-  gender: string;
-}
-
 async function generateOneImage(prompt: string, references: ImageReference[]): Promise<GeneratedImage> {
   const ai = getGoogleClient();
   const parts = [
@@ -48,23 +42,4 @@ async function generateOneImage(prompt: string, references: ImageReference[]): P
 
 export async function generateCharacterImage(prompt: string): Promise<GeneratedImage> {
   return generateOneImage(prompt, []);
-}
-
-export async function generateSceneImageVariants(
-  prompt: string,
-  references: ImageReference[],
-  variantCount = 2
-): Promise<GeneratedImage[]> {
-  const attempts = await Promise.allSettled(
-    Array.from({ length: variantCount }, () => generateOneImage(prompt, references))
-  );
-  const variants = attempts
-    .filter((r): r is PromiseFulfilledResult<GeneratedImage> => r.status === 'fulfilled')
-    .map((r) => r.value);
-  if (variants.length === 0) {
-    const firstError = attempts.find((r): r is PromiseRejectedResult => r.status === 'rejected');
-    const message = firstError?.reason instanceof Error ? firstError.reason.message : 'All image variants failed to generate.';
-    throw new ApiError(502, 'gemini_all_variants_failed', message);
-  }
-  return variants;
 }

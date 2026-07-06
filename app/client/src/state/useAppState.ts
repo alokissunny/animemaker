@@ -3,9 +3,9 @@ import {
   checkExportStatusApi,
   checkSceneVideoStatusApi,
   generateCharacterApi,
-  generateSceneImagesApi,
   generateScenesApi,
   generateStoryApi,
+  getLastFrameApi,
   loadProjectApi,
   regenerateOneSceneApi,
   saveProjectApi,
@@ -22,7 +22,6 @@ import {
   type FinalConfig,
   type PersistedProject,
   type Scene,
-  type SceneImageState,
   type SceneVideoState,
   type Screen,
   type Story,
@@ -42,17 +41,15 @@ function durationSecondsForScene(episodeConfig: EpisodeConfig): number {
   return Math.max(4, Math.min(8, Math.round(perScene)));
 }
 
-function pickCharacterRefs(scene: { charactersInvolved: string }, characters: Character[]) {
+// Scene 1 has no prior clip to continue from, so it starts from a character portrait
+// instead — pick whichever finalized character is actually named in that scene.
+function pickPrimaryCharacterImage(
+  scene: { charactersInvolved: string },
+  characters: Character[]
+): { imageBase64: string; mimeType: string } | undefined {
   const names = scene.charactersInvolved.split(',').map((n) => n.trim().toLowerCase());
-  const matched = characters.filter((c) => names.includes(c.name.toLowerCase()));
-  const refs = (matched.length ? matched : characters).slice(0, 2);
-  return refs.map((c) => ({
-    imageBase64: c.imageBase64,
-    mimeType: c.mimeType,
-    name: c.name,
-    ageGroup: c.ageGroup,
-    gender: c.gender,
-  }));
+  const chosen = characters.find((c) => names.includes(c.name.toLowerCase())) || characters[0];
+  return chosen ? { imageBase64: chosen.imageBase64, mimeType: chosen.mimeType } : undefined;
 }
 
 export function useAppState() {
@@ -87,10 +84,8 @@ export function useAppState() {
   const [scenesGenStatus, setScenesGenStatus] = useState<'idle' | 'generating' | 'ready' | 'error'>('idle');
   const [scenesGenError, setScenesGenError] = useState<string | null>(null);
   const [regeneratingSceneIds, setRegeneratingSceneIds] = useState<Record<string, boolean>>({});
-  const [editingScenePromptId, setEditingScenePromptId] = useState<string | null>(null);
   const [editingMotionPromptId, setEditingMotionPromptId] = useState<string | null>(null);
 
-  const [images, setImages] = useState<Record<string, SceneImageState>>({});
   const [videos, setVideos] = useState<Record<string, SceneVideoState>>({});
   const [activeSceneIndex, setActiveSceneIndex] = useState(0);
   const [previewSceneId, setPreviewSceneId] = useState<string | null>(null);
@@ -237,68 +232,32 @@ export function useAppState() {
     [story, episodeConfig, characters, scenes]
   );
 
-  const updateScenePrompt = useCallback((id: string, imagePrompt: string) => {
-    setScenes((prev) => prev.map((s) => (s.id === id ? { ...s, imagePrompt } : s)));
-  }, []);
   const updateSceneMotionPrompt = useCallback((id: string, videoPrompt: string) => {
     setScenes((prev) => prev.map((s) => (s.id === id ? { ...s, videoPrompt } : s)));
   }, []);
 
-  const generateImageForScene = useCallback(
-    async (scene: Scene) => {
-      setImages((prev) => ({ ...prev, [scene.id]: { status: 'generating', variants: [], selectedVariant: null } }));
-      try {
-        const refs = pickCharacterRefs(scene, characters);
-        const result = await generateSceneImagesApi(scene.id, scene.imagePrompt, refs);
-        setImages((prev) => ({
-          ...prev,
-          [scene.id]: { status: 'ready', variants: result.variants, selectedVariant: result.variants[0]?.id ?? null },
-        }));
-      } catch (err) {
-        setImages((prev) => ({
-          ...prev,
-          [scene.id]: {
-            status: 'error',
-            variants: [],
-            selectedVariant: null,
-            error: err instanceof Error ? err.message : 'Image generation failed.',
-          },
-        }));
-      }
-    },
-    [characters]
-  );
-
-  const goToImages = useCallback(() => {
-    setScreen('images');
-    scenes.forEach((scene) => void generateImageForScene(scene));
-  }, [scenes, generateImageForScene]);
-
-  const selectImageVariant = useCallback((sceneId: string, variantId: number) => {
-    setImages((prev) => ({ ...prev, [sceneId]: { ...prev[sceneId], status: 'ready', selectedVariant: variantId } }));
-  }, []);
-  const approveImage = useCallback((sceneId: string) => {
-    setImages((prev) => ({ ...prev, [sceneId]: { ...prev[sceneId], status: 'approved' } }));
-  }, []);
-  const regenerateImage = useCallback(
-    (sceneId: string) => {
-      const scene = scenes.find((s) => s.id === sceneId);
-      if (scene) void generateImageForScene(scene);
-    },
-    [scenes, generateImageForScene]
-  );
-
+  // Scenes generate one at a time, in order: each scene's video continues from the
+  // previous scene's actual last frame (extracted server-side), so the episode reads
+  // as one continuous shot instead of jump-cutting between unrelated stills. Scene 1
+  // has nothing to continue from, so it starts from a character portrait instead.
   const startVideoForScene = useCallback(
-    async (scene: Scene) => {
-      const im = images[scene.id];
-      const variant = im?.variants.find((v) => v.id === im.selectedVariant) ?? im?.variants[0];
-      if (!variant) return;
+    async (scene: Scene, sceneIndex: number) => {
       setVideos((prev) => ({ ...prev, [scene.id]: { status: 'generating' } }));
       try {
+        let ref: { imageBase64: string; mimeType: string } | undefined;
+        if (sceneIndex === 0) {
+          ref = pickPrimaryCharacterImage(scene, characters);
+          if (!ref) throw new Error('Add at least one character before generating scene videos.');
+        } else {
+          const prevScene = scenes[sceneIndex - 1];
+          const prevVideoId = videos[prevScene?.id ?? '']?.videoId;
+          if (!prevVideoId) throw new Error('The previous scene needs to be approved first.');
+          ref = await getLastFrameApi(prevVideoId);
+        }
         const { operationName } = await startSceneVideoApi(
           scene.id,
-          variant.imageBase64,
-          variant.mimeType,
+          ref.imageBase64,
+          ref.mimeType,
           scene.videoPrompt,
           durationSecondsForScene(episodeConfig)
         );
@@ -310,21 +269,30 @@ export function useAppState() {
         }));
       }
     },
-    [images, episodeConfig]
+    [characters, scenes, videos, episodeConfig]
   );
 
   const goToVideos = useCallback(() => {
     setScreen('videos');
-    scenes.forEach((scene) => void startVideoForScene(scene));
+    if (scenes.length > 0) void startVideoForScene(scenes[0], 0);
   }, [scenes, startVideoForScene]);
 
-  const approveVideo = useCallback((sceneId: string) => {
-    setVideos((prev) => ({ ...prev, [sceneId]: { ...prev[sceneId], status: 'approved' } }));
-  }, []);
+  const approveVideo = useCallback(
+    (sceneId: string) => {
+      setVideos((prev) => ({ ...prev, [sceneId]: { ...prev[sceneId], status: 'approved' } }));
+      const index = scenes.findIndex((s) => s.id === sceneId);
+      const next = scenes[index + 1];
+      if (next && !videos[next.id]) {
+        void startVideoForScene(next, index + 1);
+      }
+    },
+    [scenes, videos, startVideoForScene]
+  );
   const regenerateVideo = useCallback(
     (sceneId: string) => {
-      const scene = scenes.find((s) => s.id === sceneId);
-      if (scene) void startVideoForScene(scene);
+      const index = scenes.findIndex((s) => s.id === sceneId);
+      if (index === -1) return;
+      void startVideoForScene(scenes[index], index);
     },
     [scenes, startVideoForScene]
   );
@@ -422,7 +390,6 @@ export function useAppState() {
     setStoryGenStatus(savedProject.story ? 'ready' : 'idle');
     setScenes(savedProject.scenes);
     setScenesGenStatus(savedProject.scenes.length > 0 ? 'ready' : 'idle');
-    setImages(savedProject.images);
     setVideos(savedProject.videos);
     setFinalConfig(savedProject.finalConfig);
     setScreen(savedProject.screen);
@@ -435,12 +402,12 @@ export function useAppState() {
     if (!hasSaveableContent) return;
     setSaveStatus('saving');
     const timeout = setTimeout(() => {
-      saveProjectApi({ screen, characters, episodeConfig, story, scenes, images, videos, finalConfig })
+      saveProjectApi({ screen, characters, episodeConfig, story, scenes, videos, finalConfig })
         .then(() => setSaveStatus('saved'))
         .catch(() => setSaveStatus('idle'));
     }, 1500);
     return () => clearTimeout(timeout);
-  }, [hasSaveableContent, screen, characters, episodeConfig, story, scenes, images, videos, finalConfig]);
+  }, [hasSaveableContent, screen, characters, episodeConfig, story, scenes, videos, finalConfig]);
 
   return {
     screen, setScreen, jumpToStep,
@@ -458,10 +425,7 @@ export function useAppState() {
 
     scenes, scenesGenStatus, scenesGenError, regeneratingSceneIds,
     approveScene, regenerateScene,
-    editingScenePromptId, setEditingScenePromptId, updateScenePrompt,
     editingMotionPromptId, setEditingMotionPromptId, updateSceneMotionPrompt,
-
-    images, goToImages, selectImageVariant, approveImage, regenerateImage,
 
     videos, goToVideos, approveVideo, regenerateVideo,
     activeSceneIndex, setActiveSceneIndex, previewSceneId, setPreviewSceneId,

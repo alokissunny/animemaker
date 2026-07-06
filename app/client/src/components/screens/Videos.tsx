@@ -36,7 +36,9 @@ export function Videos({
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <div style={{ fontFamily: fonts.display, fontWeight: 800, fontSize: 26, marginBottom: 6 }}>Generate scene videos</div>
-          <div style={{ fontSize: 14, color: colors.muted }}>Veo animates each approved image into a short motion clip.</div>
+          <div style={{ fontSize: 14, color: colors.muted }}>
+            Veo generates one scene at a time, each continuing from the last frame of the scene before it — approve a scene to start the next.
+          </div>
         </div>
         <div style={{ fontSize: 13, fontWeight: 700, color: colors.violetSoft, background: 'rgba(139,92,246,0.12)', padding: '8px 14px', borderRadius: 999 }}>
           {approvedCount} / {scenes.length} approved
@@ -48,26 +50,30 @@ export function Videos({
           const vd = videos[sc.id] || { status: 'idle' as const };
           const approved = vd.status === 'approved';
           const ready = vd.status === 'ready' || approved;
+          const isQueued = vd.status === 'idle';
+          const isGenerating = vd.status === 'generating';
           const isEditingPrompt = editingMotionPromptId === sc.id;
           return (
-            <div key={sc.id} style={{ background: 'linear-gradient(180deg,rgba(255,255,255,0.045),rgba(255,255,255,0.015))', border: `1px solid ${approved ? 'rgba(52,211,153,0.4)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 18, padding: 20, display: 'grid', gridTemplateColumns: '200px 1fr', gap: 20 }}>
+            <div key={sc.id} style={{ background: 'linear-gradient(180deg,rgba(255,255,255,0.045),rgba(255,255,255,0.015))', border: `1px solid ${approved ? 'rgba(52,211,153,0.4)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 18, padding: 20, display: 'grid', gridTemplateColumns: '200px 1fr', gap: 20, opacity: isQueued ? 0.6 : 1 }}>
               <div style={{ aspectRatio: '1', borderRadius: 14, background: 'linear-gradient(135deg,#3B2E6B,#6B3E7A)', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                 {ready && vd.videoId ? (
                   <video src={videoFileUrl(vd.videoId)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted loop autoPlay playsInline />
                 ) : vd.status === 'error' ? (
                   <div style={{ fontSize: 11, color: '#F5A8D0', padding: 10, textAlign: 'center' }}>Generation failed</div>
-                ) : (
+                ) : isGenerating ? (
                   <>
                     <ShimmerOverlay />
                     <Spinner size={34} />
                   </>
+                ) : (
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>Waiting…</div>
                 )}
               </div>
               <div>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
                   <div style={{ fontFamily: fonts.display, fontWeight: 700, fontSize: 15, lineHeight: 1.35 }}>Scene {sc.number} · {sc.title}</div>
-                  <div style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 999, fontSize: 10.5, fontWeight: 700, fontFamily: fonts.display, background: approved ? 'rgba(52,211,153,0.18)' : vd.status === 'generating' ? 'rgba(251,191,36,0.16)' : vd.status === 'error' ? 'rgba(236,72,153,0.18)' : ready ? 'rgba(79,140,255,0.16)' : 'rgba(79,140,255,0.16)', color: approved ? colors.greenText : vd.status === 'generating' ? colors.yellow : vd.status === 'error' ? '#F5A8D0' : colors.blueSoft }}>
-                    {approved ? 'Approved' : vd.status === 'generating' ? 'Generating' : vd.status === 'error' ? 'Failed' : ready ? 'Ready' : 'Queued'}
+                  <div style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 999, fontSize: 10.5, fontWeight: 700, fontFamily: fonts.display, background: approved ? 'rgba(52,211,153,0.18)' : isGenerating ? 'rgba(251,191,36,0.16)' : vd.status === 'error' ? 'rgba(236,72,153,0.18)' : ready ? 'rgba(79,140,255,0.16)' : 'rgba(255,255,255,0.08)', color: approved ? colors.greenText : isGenerating ? colors.yellow : vd.status === 'error' ? '#F5A8D0' : ready ? colors.blueSoft : colors.mutedDim }}>
+                    {approved ? 'Approved' : isGenerating ? 'Generating' : vd.status === 'error' ? 'Failed' : ready ? 'Ready' : 'Queued'}
                   </div>
                 </div>
                 <div style={{ fontSize: 11.5, color: '#8A87A0', marginBottom: 8, lineHeight: 1.5 }}>
@@ -92,20 +98,24 @@ export function Videos({
                   </div>
                 )}
 
-                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                  <ApproveButton approved={approved} label="Approve video" onClick={() => approveVideo(sc.id)} disabled={!ready} />
-                  <SecondaryButton onClick={() => regenerateVideo(sc.id)} disabled={vd.status === 'generating'} style={{ padding: '10px 14px', fontSize: 12 }}>
-                    Regenerate video
-                  </SecondaryButton>
-                  <SecondaryButton onClick={() => setEditingMotionPromptId(isEditingPrompt ? null : sc.id)} style={{ padding: '10px 14px', fontSize: 12 }}>
-                    {isEditingPrompt ? 'Done editing prompt' : 'Edit motion prompt'}
-                  </SecondaryButton>
-                  {ready && (
-                    <SecondaryButton onClick={() => setPreviewSceneId(sc.id)} style={{ padding: '10px 14px', fontSize: 12 }}>
-                      Preview scene
+                {isQueued ? (
+                  <div style={{ fontSize: 12, color: colors.mutedDim }}>Waiting for the previous scene to be approved.</div>
+                ) : (
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                    <ApproveButton approved={approved} label="Approve video" onClick={() => approveVideo(sc.id)} disabled={!ready} />
+                    <SecondaryButton onClick={() => regenerateVideo(sc.id)} disabled={isGenerating} style={{ padding: '10px 14px', fontSize: 12 }}>
+                      Regenerate video
                     </SecondaryButton>
-                  )}
-                </div>
+                    <SecondaryButton onClick={() => setEditingMotionPromptId(isEditingPrompt ? null : sc.id)} style={{ padding: '10px 14px', fontSize: 12 }}>
+                      {isEditingPrompt ? 'Done editing prompt' : 'Edit motion prompt'}
+                    </SecondaryButton>
+                    {ready && (
+                      <SecondaryButton onClick={() => setPreviewSceneId(sc.id)} style={{ padding: '10px 14px', fontSize: 12 }}>
+                        Preview scene
+                      </SecondaryButton>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           );

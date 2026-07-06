@@ -6,7 +6,6 @@ import { ApiError } from './apiError.js';
 import { charactersRouter } from './routes/characters.js';
 import { storyRouter } from './routes/story.js';
 import { scenesRouter } from './routes/scenes.js';
-import { imagesRouter } from './routes/images.js';
 import { videosRouter } from './routes/videos.js';
 import { exportRouter } from './routes/export.js';
 import { authRouter } from './routes/auth.js';
@@ -28,7 +27,6 @@ app.get('/api/health', (_req, res) => {
 app.use('/api/characters', charactersRouter);
 app.use('/api/story', storyRouter);
 app.use('/api/scenes', scenesRouter);
-app.use('/api/images', imagesRouter);
 app.use('/api/videos', videosRouter);
 app.use('/api/export', exportRouter);
 app.use('/api/auth', authRouter);

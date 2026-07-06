@@ -81,22 +81,6 @@ export const regenerateOneSceneApi = (
     previousScene,
   });
 
-export interface ImageGenerateResponse {
-  sceneId: string;
-  variants: { id: number; imageBase64: string; mimeType: string }[];
-}
-
-export interface SceneCharacterRef {
-  imageBase64: string;
-  mimeType: string;
-  name: string;
-  ageGroup: string;
-  gender: string;
-}
-
-export const generateSceneImagesApi = (sceneId: string, imagePrompt: string, characterRefs: SceneCharacterRef[]) =>
-  post<ImageGenerateResponse>('/api/images/generate', { sceneId, imagePrompt, characterRefs, variantCount: 2 });
-
 export interface VideoStartResponse {
   sceneId: string;
   operationName: string;
@@ -121,6 +105,19 @@ export const checkSceneVideoStatusApi = (operationName: string) =>
   post<VideoStatusResponse>('/api/videos/status', { operationName });
 
 export const videoFileUrl = (videoId: string) => `${API_BASE}/api/videos/file/${videoId}`;
+
+export interface LastFrameResponse {
+  imageBase64: string;
+  mimeType: string;
+}
+
+export const getLastFrameApi = (videoId: string) =>
+  fetch(`${API_BASE}/api/videos/last-frame/${videoId}`)
+    .then(async (res) => {
+      const data = await res.json();
+      if (!res.ok) throw new ApiRequestError(data.error || 'Could not read the previous scene clip.', data.code || 'unknown_error');
+      return data as LastFrameResponse;
+    });
 
 export interface ExportStartResponse {
   exportId: string;

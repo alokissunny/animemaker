@@ -8,7 +8,6 @@ import { Characters } from './components/screens/Characters';
 import { EpisodeSetup } from './components/screens/EpisodeSetup';
 import { Story } from './components/screens/Story';
 import { Scenes } from './components/screens/Scenes';
-import { Images } from './components/screens/Images';
 import { Videos } from './components/screens/Videos';
 import { Final } from './components/screens/Final';
 
@@ -85,23 +84,6 @@ function App() {
             regeneratingSceneIds={app.regeneratingSceneIds}
             approveScene={app.approveScene}
             regenerateScene={app.regenerateScene}
-            editingScenePromptId={app.editingScenePromptId}
-            setEditingScenePromptId={app.setEditingScenePromptId}
-            updateScenePrompt={app.updateScenePrompt}
-            goToImages={app.goToImages}
-          />
-        )}
-
-        {app.screen === 'images' && (
-          <Images
-            scenes={app.scenes}
-            images={app.images}
-            selectImageVariant={app.selectImageVariant}
-            approveImage={app.approveImage}
-            regenerateImage={app.regenerateImage}
-            editingScenePromptId={app.editingScenePromptId}
-            setEditingScenePromptId={app.setEditingScenePromptId}
-            updateScenePrompt={app.updateScenePrompt}
             goToVideos={app.goToVideos}
           />
         )}

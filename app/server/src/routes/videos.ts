@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { asyncHandler } from '../asyncHandler.js';
 import { checkVideoStatus, getCachedVideo, startVideoGeneration } from '../services/veoService.js';
+import { extractLastFrame } from '../services/frameExtractService.js';
 
 export const videosRouter = Router();
 
@@ -54,5 +55,18 @@ videosRouter.get(
     res.setHeader('Content-Type', cached.mimeType);
     res.setHeader('Content-Length', cached.buffer.length.toString());
     res.send(cached.buffer);
+  })
+);
+
+videosRouter.get(
+  '/last-frame/:videoId',
+  asyncHandler(async (req, res) => {
+    const cached = await getCachedVideo(req.params.videoId);
+    if (!cached) {
+      res.status(404).json({ error: 'Video not found or has expired.', code: 'not_found' });
+      return;
+    }
+    const frame = await extractLastFrame(cached.buffer);
+    res.json(frame);
   })
 );
