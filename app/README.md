@@ -10,7 +10,7 @@ Unlike the original clickable prototype (which faked all "AI generation" with `s
 | --- | --- |
 | Character bio + image prompt, story, scene breakdown, captions | OpenAI (ChatGPT) |
 | Character portraits & scene images | Google Gemini "Nano Banana" (`gemini-2.5-flash-image`) |
-| Scene videos (image → motion clip) | Google Veo (`veo-3.0-generate-001`) |
+| Scene videos (image → motion clip) | Google Veo (`veo-3.1-generate-preview` by default) |
 
 ## Structure
 
@@ -37,6 +37,10 @@ If a key is missing, the affected screen shows a clear inline error ("OPENAI_API
 
 - **OpenAI**: https://platform.openai.com/api-keys
 - **Google (Gemini + Veo, same key)**: https://aistudio.google.com/apikey — note Veo access may require a billing-enabled Google Cloud project.
+- **Veo model name varies by account.** Not every key has access to the same Veo model names. If video generation fails with a `404 ... is not found for API version v1beta`, list what your key can actually use and set `VEO_MODEL` in `server/.env` accordingly:
+  ```bash
+  curl -s "https://generativelanguage.googleapis.com/v1beta/models?key=YOUR_GOOGLE_API_KEY" | grep -i veo
+  ```
 
 ## Known MVP boundaries
 
@@ -44,6 +48,7 @@ If a key is missing, the affected screen shows a clear inline error ("OPENAI_API
 - **Auth**: Login/signup screens are stubbed (no real accounts) per the original design brief's scope decision.
 - **Regenerate scene**: uses a scoped OpenAI call that rewrites just that one scene (not the whole batch), keeping the rest of the story-to-scene continuity intact.
 - Generated character portraits are used as reference images when generating scene images that include that character, for visual consistency across a scene.
+- **Veo's safety filters may reject video generation for scenes depicting children** ("Your prompt conflicted with our safety policies..."). This is Google's policy, not a bug — the video request still completes (`done: true`) with a clear `error` message and a **Retry** button rather than hanging. If you hit this often, consider aging characters up (e.g. "Teen" or "Young adult") for the video-generation step, or trying a different framing/motion prompt.
 
 ## Scripts (from `app/`)
 

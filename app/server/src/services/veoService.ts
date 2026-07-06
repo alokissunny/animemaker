@@ -81,7 +81,11 @@ export async function checkVideoStatus(
   }
   const generatedVideo = operation.response?.generatedVideos?.[0]?.video;
   if (!generatedVideo) {
-    return { done: true, error: 'Veo finished but returned no video.' };
+    const raiReasons = operation.response?.raiMediaFilteredReasons;
+    const error = raiReasons?.length
+      ? raiReasons.join(' ')
+      : 'Veo finished but returned no video. Try adjusting the scene image or motion prompt.';
+    return { done: true, error };
   }
 
   const videoId = randomUUID();
