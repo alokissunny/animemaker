@@ -6,6 +6,7 @@ import {
   generateScenesApi,
   generateStoryApi,
   getLastFrameApi,
+  listProjectsApi,
   loadProjectApi,
   regenerateOneSceneApi,
   saveProjectApi,
@@ -14,6 +15,7 @@ import {
 } from '../api';
 import {
   blankDraft,
+  EXPRESSION_PRESETS,
   FLOW_SCREENS,
   type Character,
   type CharacterDraft,
@@ -21,18 +23,78 @@ import {
   type ExportJobStatus,
   type FinalConfig,
   type PersistedProject,
+  type Project,
   type Scene,
   type SceneVideoState,
   type Screen,
   type Story,
 } from '../types';
 
-const SAMPLE_PROJECTS = [
-  { id: 'p1', title: "Lily's Rainy Day", meta: '4 characters · Friendship · 2 min', initials: 'LR', statusLabel: 'Video Ready', progressPct: '100%', thumbGradient: 'linear-gradient(135deg,#3B2E6B,#6B3E7A)' },
-  { id: 'p2', title: 'Sunshine Preschool', meta: '3 characters · Sharing & Kindness · 1 min', initials: 'SP', statusLabel: 'Videos in Progress', progressPct: '78%', thumbGradient: 'linear-gradient(135deg,#2E4B6B,#3E6B85)' },
-  { id: 'p3', title: 'Counting Farm Friends', meta: '5 characters · Counting Numbers · 3 min', initials: 'CF', statusLabel: 'Story Approved', progressPct: '42%', thumbGradient: 'linear-gradient(135deg,#6B2E3E,#8A3E4F)' },
-  { id: 'p4', title: 'Untitled Draft', meta: '1 character · Not started', initials: 'UD', statusLabel: 'Draft', progressPct: '10%', thumbGradient: 'linear-gradient(135deg,#2A283C,#3A3750)' },
+function defaultEpisodeConfig(): EpisodeConfig {
+  return {
+    theme: 'Friendship',
+    duration: '1 minute',
+    audience: 'Preschool (3-5)',
+    mood: 'Wholesome',
+    visualStyle: 'Storybook 2D (Peppa Pig style)',
+    language: 'English',
+    numScenes: 5,
+    idea: '',
+  };
+}
+
+function defaultFinalConfig(): FinalConfig {
+  return { captionsOn: true, music: 'Warm acoustic (default)', format: 'YouTube Shorts' };
+}
+
+const THUMB_GRADIENTS = [
+  'linear-gradient(135deg,#3B2E6B,#6B3E7A)',
+  'linear-gradient(135deg,#2E4B6B,#3E6B85)',
+  'linear-gradient(135deg,#6B2E3E,#8A3E4F)',
+  'linear-gradient(135deg,#3E6B4F,#4F8A6B)',
+  'linear-gradient(135deg,#2A283C,#3A3750)',
 ];
+
+function statusLabelForProject(p: PersistedProject): string {
+  const allApproved = p.scenes.length > 0 && p.scenes.every((s) => p.videos[s.id]?.status === 'approved');
+  if (allApproved) return 'Video Ready';
+  if (p.scenes.some((s) => p.videos[s.id])) return 'Videos in Progress';
+  if (p.story?.approved) return 'Story Approved';
+  return 'Draft';
+}
+
+function progressPctForProject(p: PersistedProject): string {
+  const idx = FLOW_SCREENS.indexOf(p.screen);
+  const pct = idx <= 0 ? 10 : Math.round(((idx + 1) / FLOW_SCREENS.length) * 100);
+  return `${Math.min(100, Math.max(10, pct))}%`;
+}
+
+// Dashboard/ProjectDetail only need a lightweight summary — derive it from whatever
+// full project state each past project last saved, rather than storing it separately.
+function summarizeProject(p: PersistedProject, index: number): Project {
+  const title = p.story?.title || (p.characters[0] ? `${p.characters[0].name}'s Show` : 'Untitled Draft');
+  const initials =
+    title
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((w) => w[0]?.toUpperCase())
+      .join('') || 'UD';
+  const metaParts = [
+    `${p.characters.length} character${p.characters.length === 1 ? '' : 's'}`,
+    p.episodeConfig?.theme,
+    p.episodeConfig?.duration,
+  ].filter(Boolean);
+  return {
+    id: p.id,
+    title,
+    meta: metaParts.join(' · '),
+    initials,
+    statusLabel: statusLabelForProject(p),
+    progressPct: progressPctForProject(p),
+    thumbGradient: THUMB_GRADIENTS[index % THUMB_GRADIENTS.length],
+  };
+}
 
 function durationSecondsForScene(episodeConfig: EpisodeConfig): number {
   const totalSeconds =
@@ -55,7 +117,22 @@ function pickPrimaryCharacterImage(
 export function useAppState() {
   const [screen, setScreen] = useState<Screen>('landing');
   const [authTab, setAuthTab] = useState<'login' | 'signup'>('login');
-  const [selectedProjectId, setSelectedProjectId] = useState('p1');
+  const [selectedProjectId, setSelectedProjectId] = useState('');
+
+  // Every episode is its own project, with its own id and its own cast — starting a
+  // new episode gets a fresh id and wipes all in-progress state below so nothing
+  // bleeds over from whatever project was open before.
+  const [projectId, setProjectId] = useState<string>(() => crypto.randomUUID());
+  const [projectRecords, setProjectRecords] = useState<PersistedProject[]>([]);
+  const projects = projectRecords.map(summarizeProject);
+
+  const refreshProjects = useCallback(() => {
+    listProjectsApi().then(setProjectRecords);
+  }, []);
+
+  useEffect(() => {
+    refreshProjects();
+  }, [refreshProjects]);
 
   const [charTab, setCharTab] = useState<'create' | 'gallery'>('create');
   const [characters, setCharacters] = useState<Character[]>([]);
@@ -64,16 +141,7 @@ export function useAppState() {
   const [charGenError, setCharGenError] = useState<string | null>(null);
   const [charGenResult, setCharGenResult] = useState<{ bio: string; imageBase64: string; mimeType: string } | null>(null);
 
-  const [episodeConfig, setEpisodeConfig] = useState<EpisodeConfig>({
-    theme: 'Friendship',
-    duration: '1 minute',
-    audience: 'Preschool (3-5)',
-    mood: 'Wholesome',
-    visualStyle: 'Storybook 2D (Peppa Pig style)',
-    language: 'English',
-    numScenes: 5,
-    idea: '',
-  });
+  const [episodeConfig, setEpisodeConfig] = useState<EpisodeConfig>(defaultEpisodeConfig());
 
   const [story, setStory] = useState<Story | null>(null);
   const [storyGenStatus, setStoryGenStatus] = useState<'idle' | 'generating' | 'ready' | 'error'>('idle');
@@ -90,11 +158,7 @@ export function useAppState() {
   const [activeSceneIndex, setActiveSceneIndex] = useState(0);
   const [previewSceneId, setPreviewSceneId] = useState<string | null>(null);
 
-  const [finalConfig, setFinalConfig] = useState<FinalConfig>({
-    captionsOn: true,
-    music: 'Warm acoustic (default)',
-    format: 'YouTube Shorts',
-  });
+  const [finalConfig, setFinalConfig] = useState<FinalConfig>(defaultFinalConfig());
   const [exportTransition, setExportTransition] = useState('fade');
   const [exportStatus, setExportStatus] = useState<ExportJobStatus>('idle');
   const [exportError, setExportError] = useState<string | null>(null);
@@ -103,12 +167,53 @@ export function useAppState() {
   const goLanding = useCallback(() => setScreen('landing'), []);
   const goLogin = useCallback(() => setScreen('login'), []);
   const goDashboard = useCallback(() => setScreen('dashboard'), []);
-  const startNewEpisode = useCallback(() => setScreen('characters'), []);
+
+  // A brand-new episode is a brand-new project: fresh id, empty cast, defaults reset —
+  // so it never inherits characters or progress from whatever project was open before.
+  const startNewEpisode = useCallback(() => {
+    setProjectId(crypto.randomUUID());
+    setCharacters([]);
+    setDraft(blankDraft());
+    setCharGenResult(null);
+    setCharGenStatus('idle');
+    setCharGenError(null);
+    setCharTab('create');
+    setEpisodeConfig(defaultEpisodeConfig());
+    setStory(null);
+    setStoryGenStatus('idle');
+    setStoryGenError(null);
+    setIsEditingStory(false);
+    setScenes([]);
+    setScenesGenStatus('idle');
+    setScenesGenError(null);
+    setVideos({});
+    setFinalConfig(defaultFinalConfig());
+    setExportTransition('fade');
+    setExportStatus('idle');
+    setExportError(null);
+    setExportId(null);
+    setScreen('characters');
+  }, []);
+
   const openProject = useCallback((id: string) => {
     setSelectedProjectId(id);
     setScreen('projectDetail');
   }, []);
-  const resumeProject = useCallback(() => setScreen('characters'), []);
+
+  const resumeProjectById = useCallback(async (id: string) => {
+    const record = await loadProjectApi(id);
+    if (!record) return;
+    setProjectId(id);
+    setCharacters(record.characters);
+    setEpisodeConfig(record.episodeConfig);
+    setStory(record.story);
+    setStoryGenStatus(record.story ? 'ready' : 'idle');
+    setScenes(record.scenes);
+    setScenesGenStatus(record.scenes.length > 0 ? 'ready' : 'idle');
+    setVideos(record.videos);
+    setFinalConfig(record.finalConfig);
+    setScreen(record.screen);
+  }, []);
 
   const setDraftField = useCallback(
     (field: keyof CharacterDraft) => (value: string) => setDraft((d) => ({ ...d, [field]: value })),
@@ -145,6 +250,101 @@ export function useAppState() {
     setCharGenStatus('idle');
     setCharTab('gallery');
   }, [charGenResult, draft]);
+
+  const deleteCharacter = useCallback((id: string) => {
+    setCharacters((prev) => prev.filter((c) => c.id !== id));
+  }, []);
+
+  const generateExpressionVideo = useCallback(
+    (characterId: string, expressionKey: string) => {
+      const character = characters.find((c) => c.id === characterId);
+      const preset = EXPRESSION_PRESETS.find((p) => p.key === expressionKey);
+      if (!character || !preset) return;
+      setCharacters((prev) =>
+        prev.map((c) =>
+          c.id === characterId
+            ? { ...c, expressionVideos: { ...c.expressionVideos, [expressionKey]: { status: 'generating' } } }
+            : c
+        )
+      );
+      const prompt =
+        `${character.name} ${preset.action}. Keep the exact same character design, art style, outfit, and colors ` +
+        'as the reference image. Gentle, wholesome kids’ show animation — simple shapes, bright flat colors, no scary or violent content.';
+      startSceneVideoApi(`${characterId}::${expressionKey}`, character.imageBase64, character.mimeType, prompt, 4)
+        .then(({ operationName }) => {
+          setCharacters((prev) =>
+            prev.map((c) =>
+              c.id === characterId
+                ? { ...c, expressionVideos: { ...c.expressionVideos, [expressionKey]: { status: 'generating', operationName } } }
+                : c
+            )
+          );
+        })
+        .catch((err) => {
+          setCharacters((prev) =>
+            prev.map((c) =>
+              c.id === characterId
+                ? {
+                    ...c,
+                    expressionVideos: {
+                      ...c.expressionVideos,
+                      [expressionKey]: { status: 'error', error: err instanceof Error ? err.message : 'Expression video generation failed.' },
+                    },
+                  }
+                : c
+            )
+          );
+        });
+    },
+    [characters]
+  );
+
+  const charactersRef = useRef(characters);
+  charactersRef.current = characters;
+  useEffect(() => {
+    const interval = setInterval(() => {
+      charactersRef.current.forEach((c) => {
+        Object.entries(c.expressionVideos || {}).forEach(([key, v]) => {
+          if (v.status !== 'generating' || !v.operationName || v.videoId) return;
+          checkSceneVideoStatusApi(v.operationName)
+            .then((status) => {
+              if (!status.done) return;
+              setCharacters((prev) =>
+                prev.map((ch) =>
+                  ch.id === c.id
+                    ? {
+                        ...ch,
+                        expressionVideos: {
+                          ...ch.expressionVideos,
+                          [key]: status.error
+                            ? { status: 'error', error: status.error }
+                            : { status: 'ready', videoId: status.videoId },
+                        },
+                      }
+                    : ch
+                )
+              );
+            })
+            .catch((err) => {
+              setCharacters((prev) =>
+                prev.map((ch) =>
+                  ch.id === c.id
+                    ? {
+                        ...ch,
+                        expressionVideos: {
+                          ...ch.expressionVideos,
+                          [key]: { status: 'error', error: err instanceof Error ? err.message : 'Checking expression video failed.' },
+                        },
+                      }
+                    : ch
+                )
+              );
+            });
+        });
+      });
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   const continueToEpisodeSetup = useCallback(() => setScreen('episodeSetup'), []);
 
@@ -371,52 +571,35 @@ export function useAppState() {
     if (targetIdx <= currentIdx) setScreen(target);
   }, [screen]);
 
-  const [savedProject, setSavedProject] = useState<PersistedProject | null>(null);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
-  // Load whatever project was last saved (if any) once on mount, so the Dashboard can
-  // offer to resume it. This only fetches — it doesn't touch current in-memory state.
-  useEffect(() => {
-    loadProjectApi().then((project) => {
-      if (project) setSavedProject(project);
-    });
-  }, []);
-
-  const resumeSavedProject = useCallback(() => {
-    if (!savedProject) return;
-    setCharacters(savedProject.characters);
-    setEpisodeConfig(savedProject.episodeConfig);
-    setStory(savedProject.story);
-    setStoryGenStatus(savedProject.story ? 'ready' : 'idle');
-    setScenes(savedProject.scenes);
-    setScenesGenStatus(savedProject.scenes.length > 0 ? 'ready' : 'idle');
-    setVideos(savedProject.videos);
-    setFinalConfig(savedProject.finalConfig);
-    setScreen(savedProject.screen);
-  }, [savedProject]);
-
   // Autosave: debounced so we're not writing on every keystroke, and skipped until
-  // there's actually a project worth saving (a character or scene exists).
+  // there's actually a project worth saving (a character or scene exists). Each
+  // project saves under its own id, so switching projects never overwrites another.
   const hasSaveableContent = characters.length > 0 || scenes.length > 0;
   useEffect(() => {
     if (!hasSaveableContent) return;
     setSaveStatus('saving');
     const timeout = setTimeout(() => {
-      saveProjectApi({ screen, characters, episodeConfig, story, scenes, videos, finalConfig })
-        .then(() => setSaveStatus('saved'))
+      saveProjectApi({ id: projectId, screen, characters, episodeConfig, story, scenes, videos, finalConfig })
+        .then(() => {
+          setSaveStatus('saved');
+          refreshProjects();
+        })
         .catch(() => setSaveStatus('idle'));
     }, 1500);
     return () => clearTimeout(timeout);
-  }, [hasSaveableContent, screen, characters, episodeConfig, story, scenes, videos, finalConfig]);
+  }, [hasSaveableContent, projectId, screen, characters, episodeConfig, story, scenes, videos, finalConfig, refreshProjects]);
 
   return {
     screen, setScreen, jumpToStep,
     authTab, setAuthTab,
-    selectedProjectId, projects: SAMPLE_PROJECTS,
-    goLanding, goLogin, goDashboard, startNewEpisode, openProject, resumeProject,
+    selectedProjectId, projects,
+    goLanding, goLogin, goDashboard, startNewEpisode, openProject, resumeProjectById,
 
     charTab, setCharTab, characters, draft, setDraftField, setDraftRole,
-    charGenStatus, charGenError, charGenResult, generateCharacter, saveCharacter,
+    charGenStatus, charGenError, charGenResult, generateCharacter, saveCharacter, deleteCharacter,
+    generateExpressionVideo,
     continueToEpisodeSetup,
 
     episodeConfig, setEpisodeField,
@@ -433,7 +616,7 @@ export function useAppState() {
     finalConfig, goToFinal, toggleCaptions, setMusic, setExportFormat,
     exportTransition, setExportTransition, exportStatus, exportError, exportId, startExport,
 
-    savedProject, resumeSavedProject, saveStatus,
+    saveStatus,
   };
 }
 

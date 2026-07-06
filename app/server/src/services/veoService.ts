@@ -6,6 +6,7 @@ import { type GenerateVideosOperation } from '@google/genai';
 import { config } from '../config.js';
 import { ApiError } from '../apiError.js';
 import { getGoogleClient } from './googleClient.js';
+import { stripAudio } from './ffmpegRunner.js';
 
 interface CachedVideo {
   buffer: Buffer;
@@ -111,6 +112,13 @@ export async function checkVideoStatus(
     } finally {
       await fs.rm(tmpPath, { force: true });
     }
+  }
+
+  try {
+    buffer = await stripAudio(buffer);
+  } catch {
+    // If muting fails for some reason, still return the (audible) clip rather than
+    // blocking the whole generation on a non-essential post-processing step.
   }
 
   videoCache.set(videoId, { buffer, mimeType });

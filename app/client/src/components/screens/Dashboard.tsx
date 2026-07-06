@@ -1,29 +1,18 @@
-import type { PersistedProject, Project } from '../../types';
+import type { Project } from '../../types';
 import { fonts } from '../../theme';
-
-const SCREEN_LABELS: Record<string, string> = {
-  characters: 'Characters',
-  episodeSetup: 'Episode Setup',
-  story: 'Story',
-  scenes: 'Scenes',
-  images: 'Images',
-  videos: 'Videos',
-  final: 'Export',
-};
 
 export function Dashboard({
   projects,
   onStartNew,
   onOpenProject,
-  savedProject,
-  onResumeSaved,
+  onQuickResume,
 }: {
   projects: Project[];
   onStartNew: () => void;
   onOpenProject: (id: string) => void;
-  savedProject: PersistedProject | null;
-  onResumeSaved: () => void;
+  onQuickResume: (id: string) => void;
 }) {
+  const mostRecent = projects[0];
   return (
     <div data-screen-label="Dashboard" style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 32px 80px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32, flexWrap: 'wrap', gap: 16 }}>
@@ -39,9 +28,9 @@ export function Dashboard({
         </button>
       </div>
 
-      {savedProject && (
+      {mostRecent && (
         <div
-          onClick={onResumeSaved}
+          onClick={() => onQuickResume(mostRecent.id)}
           style={{
             cursor: 'pointer',
             marginBottom: 28,
@@ -58,13 +47,10 @@ export function Dashboard({
         >
           <div>
             <div style={{ fontFamily: fonts.display, fontWeight: 700, fontSize: 15.5, marginBottom: 4 }}>
-              Resume in-progress episode
+              Resume "{mostRecent.title}"
             </div>
             <div style={{ fontSize: 12.5, color: '#C9C6DA' }}>
-              {savedProject.characters.length} character{savedProject.characters.length === 1 ? '' : 's'}
-              {savedProject.scenes.length > 0 ? ` · ${savedProject.scenes.length} scenes` : ''}
-              {' · '}Last at {SCREEN_LABELS[savedProject.screen] || savedProject.screen}
-              {savedProject.updatedAt ? ` · saved ${new Date(savedProject.updatedAt).toLocaleString()}` : ''}
+              {mostRecent.meta} · {mostRecent.statusLabel}
             </div>
           </div>
           <div

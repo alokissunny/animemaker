@@ -143,8 +143,14 @@ export const loginApi = (email: string, password: string) =>
 
 export const saveProjectApi = (project: PersistedProject) => post<{ ok: boolean }>('/api/project/save', project);
 
-export const loadProjectApi = () =>
-  fetch(`${API_BASE}/api/project/load`)
+export const listProjectsApi = (): Promise<PersistedProject[]> =>
+  fetch(`${API_BASE}/api/project/list`)
+    .then((res) => res.json())
+    .then((data) => (data.projects as PersistedProject[]) || [])
+    .catch(() => []);
+
+export const loadProjectApi = (id: string): Promise<PersistedProject | null> =>
+  fetch(`${API_BASE}/api/project/load/${id}`)
     .then((res) => res.json())
     .then((data) => data.project as PersistedProject | null)
     .catch(() => null);

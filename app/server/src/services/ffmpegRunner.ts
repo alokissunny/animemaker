@@ -1,4 +1,8 @@
 import { spawn } from 'node:child_process';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import { randomUUID } from 'node:crypto';
 import ffmpegPathImport from 'ffmpeg-static';
 
 // ffmpeg-static is CJS with a plain `module.exports = <string|null>`, but its .d.ts uses
@@ -52,4 +56,22 @@ export function probeDuration(filePath: string): Promise<number> {
       resolve(hours * 3600 + minutes * 60 + seconds);
     });
   });
+}
+
+// Veo's generateAudio config flag isn't accepted by every backend (the Gemini Developer
+// API rejects it outright), so instead of relying on that we always strip the audio
+// track back out here — this way every generated clip ends up silent regardless of
+// which Google backend (API key vs Vertex AI) produced it.
+export async function stripAudio(inputBuffer: Buffer): Promise<Buffer> {
+  const id = randomUUID();
+  const inPath = path.join(os.tmpdir(), `nova-mute-in-${id}.mp4`);
+  const outPath = path.join(os.tmpdir(), `nova-mute-out-${id}.mp4`);
+  await fs.writeFile(inPath, inputBuffer);
+  try {
+    await runFfmpeg(['-y', '-i', inPath, '-c:v', 'copy', '-an', outPath]);
+    return await fs.readFile(outPath);
+  } finally {
+    await fs.rm(inPath, { force: true });
+    await fs.rm(outPath, { force: true });
+  }
 }

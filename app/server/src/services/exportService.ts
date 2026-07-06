@@ -100,12 +100,14 @@ async function processExport(
   }
 }
 
+// Every clip Veo produces is muted server-side (see veoService's stripAudio), so none
+// of the export paths below need to touch an audio stream — there isn't one.
 async function reencodeSingle(inputPath: string, format: ExportFormat, outputPath: string) {
   await runFfmpeg([
     '-y',
     '-i', inputPath,
     '-vf', aspectFilter(format),
-    '-c:v', 'libx264', '-preset', 'veryfast', '-c:a', 'aac',
+    '-c:v', 'libx264', '-preset', 'veryfast',
     outputPath,
   ]);
 }
@@ -125,13 +127,13 @@ async function concatCutFast(inputPaths: string[], outputPath: string, workDir: 
 async function concatCutReencode(inputPaths: string[], format: ExportFormat, outputPath: string) {
   const inputArgs = inputPaths.flatMap((p) => ['-i', p]);
   const n = inputPaths.length;
-  const filterInputs = inputPaths.map((_, i) => `[${i}:v:0][${i}:a:0]`).join('');
-  const filter = `${filterInputs}concat=n=${n}:v=1:a=1[vraw][aout];[vraw]${aspectFilter(format)}[vout]`;
+  const filterInputs = inputPaths.map((_, i) => `[${i}:v:0]`).join('');
+  const filter = `${filterInputs}concat=n=${n}:v=1:a=0[vraw];[vraw]${aspectFilter(format)}[vout]`;
   await runFfmpeg([
     '-y', ...inputArgs,
     '-filter_complex', filter,
-    '-map', '[vout]', '-map', '[aout]',
-    '-c:v', 'libx264', '-preset', 'veryfast', '-c:a', 'aac',
+    '-map', '[vout]',
+    '-c:v', 'libx264', '-preset', 'veryfast',
     outputPath,
   ]);
 }
@@ -148,32 +150,27 @@ async function concatWithTransitions(
   const d = Math.min(CROSSFADE_SECONDS, ...durations.map((x) => x * 0.4));
 
   const videoFilters: string[] = [];
-  const audioFilters: string[] = [];
   let cumulative = durations[0];
   let vLabel = '0:v';
-  let aLabel = '0:a';
   for (let i = 1; i < n; i++) {
     const offset = Math.max(0, cumulative - d);
     const isLast = i === n - 1;
     const vOut = isLast ? 'vraw' : `v${i}`;
-    const aOut = isLast ? 'aout' : `a${i}`;
     videoFilters.push(
       `[${vLabel}][${i}:v]xfade=transition=${transition}:duration=${d.toFixed(3)}:offset=${offset.toFixed(3)}[${vOut}]`
     );
-    audioFilters.push(`[${aLabel}][${i}:a]acrossfade=d=${d.toFixed(3)}[${aOut}]`);
     vLabel = vOut;
-    aLabel = aOut;
     cumulative = cumulative + durations[i] - d;
   }
   videoFilters.push(`[vraw]${aspectFilter(format)}[vout]`);
 
-  const filterComplex = [...videoFilters, ...audioFilters].join(';');
+  const filterComplex = videoFilters.join(';');
 
   await runFfmpeg([
     '-y', ...inputArgs,
     '-filter_complex', filterComplex,
-    '-map', '[vout]', '-map', '[aout]',
-    '-c:v', 'libx264', '-preset', 'veryfast', '-c:a', 'aac',
+    '-map', '[vout]',
+    '-c:v', 'libx264', '-preset', 'veryfast',
     outputPath,
   ]);
 }

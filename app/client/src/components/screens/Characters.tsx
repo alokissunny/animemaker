@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import type { CharacterDraft, Character } from '../../types';
+import { EXPRESSION_PRESETS } from '../../types';
 import { colors, fonts, inputStyle, labelStyle, selectStyle } from '../../theme';
-import { dataUri } from '../../api';
-import { ErrorBanner, PrimaryButton, SecondaryButton, ShimmerOverlay } from '../ui';
+import { dataUri, videoFileUrl } from '../../api';
+import { ErrorBanner, Modal, PrimaryButton, SecondaryButton, ShimmerOverlay } from '../ui';
 
 const ageGroupOptions = ['Toddler (2-4)', 'Preschool (3-5)', 'Kid (6-9)', 'Adult (parent/caregiver)'];
 const genderOptions = ['Girl', 'Boy', 'Non-binary'];
@@ -62,6 +64,8 @@ export function Characters({
   charGenResult,
   generateCharacter,
   saveCharacter,
+  deleteCharacter,
+  generateExpressionVideo,
   characters,
   continueToEpisodeSetup,
 }: {
@@ -75,6 +79,8 @@ export function Characters({
   charGenResult: { bio: string; imageBase64: string; mimeType: string } | null;
   generateCharacter: () => void;
   saveCharacter: () => void;
+  deleteCharacter: (id: string) => void;
+  generateExpressionVideo: (characterId: string, expressionKey: string) => void;
   characters: Character[];
   continueToEpisodeSetup: () => void;
 }) {
@@ -82,6 +88,9 @@ export function Characters({
   const isGenerating = charGenStatus === 'generating';
   const saveDisabled = !hasPreview || !draft.name.trim();
   const previewInitial = (draft.name || '?').trim().charAt(0).toUpperCase() || '?';
+  const [previewExpr, setPreviewExpr] = useState<{ charId: string; key: string } | null>(null);
+  const previewCharacter = characters.find((c) => c.id === previewExpr?.charId);
+  const previewVideoId = previewExpr ? previewCharacter?.expressionVideos?.[previewExpr.key]?.videoId : undefined;
 
   return (
     <div data-screen-label="Character Creation" style={{ maxWidth: 1240, margin: '0 auto', padding: '32px 32px 90px' }}>
@@ -211,20 +220,71 @@ export function Characters({
           {characters.length > 0 ? (
             <>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 18, marginBottom: 32 }}>
-                {characters.map((ch) => (
-                  <div key={ch.id} style={{ background: 'linear-gradient(180deg,rgba(255,255,255,0.045),rgba(255,255,255,0.015))', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 18, overflow: 'hidden' }}>
-                    <div style={{ height: 150, position: 'relative' }}>
-                      <img src={dataUri(ch.imageBase64, ch.mimeType)} alt={ch.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      <div style={{ position: 'absolute', top: 9, right: 9, padding: '4px 10px', borderRadius: 999, fontSize: 10, fontWeight: 700, fontFamily: fonts.display, background: 'rgba(52,211,153,0.2)', color: colors.greenText }}>
-                        Finalized
+                {characters.map((ch) => {
+                  const expressions = ch.expressionVideos || {};
+                  return (
+                    <div key={ch.id} style={{ background: 'linear-gradient(180deg,rgba(255,255,255,0.045),rgba(255,255,255,0.015))', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 18, overflow: 'hidden' }}>
+                      <div style={{ height: 150, position: 'relative' }}>
+                        <img src={dataUri(ch.imageBase64, ch.mimeType)} alt={ch.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <button
+                          onClick={() => {
+                            if (window.confirm(`Remove ${ch.name} from your cast?`)) deleteCharacter(ch.id);
+                          }}
+                          title="Remove character"
+                          style={{
+                            position: 'absolute', top: 9, left: 9, width: 24, height: 24, borderRadius: '50%',
+                            border: 'none', cursor: 'pointer', background: 'rgba(10,10,18,0.55)', color: '#fff',
+                            fontSize: 13, fontWeight: 700, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          }}
+                        >
+                          ×
+                        </button>
+                        <div style={{ position: 'absolute', top: 9, right: 9, padding: '4px 10px', borderRadius: 999, fontSize: 10, fontWeight: 700, fontFamily: fonts.display, background: 'rgba(52,211,153,0.2)', color: colors.greenText }}>
+                          Finalized
+                        </div>
+                      </div>
+                      <div style={{ padding: '14px 16px 16px' }}>
+                        <div style={{ fontFamily: fonts.display, fontWeight: 700, fontSize: 14.5, marginBottom: 2 }}>{ch.name}</div>
+                        <div style={{ fontSize: 11.5, color: colors.muted, marginBottom: 12 }}>{ch.role} · {ch.animeStyle}</div>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: colors.muted, textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 7 }}>
+                          Expression clips
+                        </div>
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                          {EXPRESSION_PRESETS.map((preset) => {
+                            const st = expressions[preset.key];
+                            const isGenerating = st?.status === 'generating';
+                            const isReady = st?.status === 'ready' && !!st.videoId;
+                            const isError = st?.status === 'error';
+                            return (
+                              <button
+                                key={preset.key}
+                                onClick={() => {
+                                  if (isGenerating) return;
+                                  if (isReady) setPreviewExpr({ charId: ch.id, key: preset.key });
+                                  else generateExpressionVideo(ch.id, preset.key);
+                                }}
+                                title={isError ? st?.error : preset.label}
+                                style={{
+                                  border: 'none',
+                                  cursor: isGenerating ? 'default' : 'pointer',
+                                  padding: '6px 10px',
+                                  borderRadius: 999,
+                                  fontSize: 10.5,
+                                  fontWeight: 700,
+                                  fontFamily: fonts.display,
+                                  background: isReady ? 'rgba(52,211,153,0.18)' : isGenerating ? 'rgba(251,191,36,0.16)' : isError ? 'rgba(236,72,153,0.18)' : 'rgba(255,255,255,0.06)',
+                                  color: isReady ? colors.greenText : isGenerating ? colors.yellow : isError ? '#F5A8D0' : colors.bodyText2,
+                                }}
+                              >
+                                {isGenerating ? `${preset.label}…` : isReady ? `▶ ${preset.label}` : isError ? `${preset.label} ⟳` : preset.label}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
-                    <div style={{ padding: '14px 16px 16px' }}>
-                      <div style={{ fontFamily: fonts.display, fontWeight: 700, fontSize: 14.5, marginBottom: 2 }}>{ch.name}</div>
-                      <div style={{ fontSize: 11.5, color: colors.muted }}>{ch.role} · {ch.animeStyle}</div>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
               <PrimaryButton onClick={continueToEpisodeSetup} style={{ padding: '15px 30px', fontSize: 15 }}>
                 Continue to Episode Setup →
@@ -239,6 +299,17 @@ export function Characters({
             </div>
           )}
         </>
+      )}
+
+      {previewExpr && previewVideoId && (
+        <Modal onClose={() => setPreviewExpr(null)}>
+          <div style={{ background: '#000', borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <video src={videoFileUrl(previewVideoId)} style={{ width: '100%', display: 'block' }} controls autoPlay loop muted />
+          </div>
+          <div style={{ marginTop: 12, fontSize: 13, color: colors.muted, textAlign: 'center' }}>
+            {previewCharacter?.name} · {EXPRESSION_PRESETS.find((p) => p.key === previewExpr.key)?.label}
+          </div>
+        </Modal>
       )}
     </div>
   );

@@ -32,13 +32,12 @@ function App() {
             projects={app.projects}
             onStartNew={app.startNewEpisode}
             onOpenProject={app.openProject}
-            savedProject={app.savedProject}
-            onResumeSaved={app.resumeSavedProject}
+            onQuickResume={app.resumeProjectById}
           />
         )}
 
-        {app.screen === 'projectDetail' && (
-          <ProjectDetail project={selectedProject} onBack={app.goDashboard} onResume={app.resumeProject} />
+        {app.screen === 'projectDetail' && selectedProject && (
+          <ProjectDetail project={selectedProject} onBack={app.goDashboard} onResume={() => app.resumeProjectById(selectedProject.id)} />
         )}
 
         {app.screen === 'characters' && (
@@ -53,6 +52,8 @@ function App() {
             charGenResult={app.charGenResult}
             generateCharacter={app.generateCharacter}
             saveCharacter={app.saveCharacter}
+            deleteCharacter={app.deleteCharacter}
+            generateExpressionVideo={app.generateExpressionVideo}
             characters={app.characters}
             continueToEpisodeSetup={app.continueToEpisodeSetup}
           />

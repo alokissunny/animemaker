@@ -49,11 +49,33 @@ export function blankDraft(): CharacterDraft {
   };
 }
 
+export interface ExpressionVideoState {
+  status: 'idle' | 'generating' | 'ready' | 'error';
+  operationName?: string;
+  videoId?: string;
+  error?: string;
+}
+
+export interface ExpressionPreset {
+  key: string;
+  label: string;
+  action: string;
+}
+
+export const EXPRESSION_PRESETS: ExpressionPreset[] = [
+  { key: 'happy', label: 'Happy', action: 'smiles brightly, claps and bounces with joy' },
+  { key: 'sad', label: 'Sad', action: 'looks a little sad, pouts and sniffles softly, then takes a deep breath' },
+  { key: 'excited', label: 'Excited', action: 'jumps up and down with excitement, arms raised, cheering happily' },
+  { key: 'surprised', label: 'Surprised', action: 'gasps with surprise, eyes wide, hands to cheeks' },
+  { key: 'calm', label: 'Calm', action: 'takes a slow calm breath and gives a gentle peaceful smile, swaying softly' },
+];
+
 export interface Character extends CharacterDraft {
   id: string;
   bio: string;
   imageBase64: string;
   mimeType: string;
+  expressionVideos?: Record<string, ExpressionVideoState>;
 }
 
 export interface EpisodeConfig {
@@ -126,6 +148,7 @@ export const TRANSITION_OPTIONS: { value: string; label: string }[] = [
 export type ExportJobStatus = 'idle' | 'processing' | 'ready' | 'error';
 
 export interface PersistedProject {
+  id: string;
   screen: Screen;
   characters: Character[];
   episodeConfig: EpisodeConfig;
@@ -133,6 +156,7 @@ export interface PersistedProject {
   scenes: Scene[];
   videos: Record<string, SceneVideoState>;
   finalConfig: FinalConfig;
+  createdAt?: string;
   updatedAt?: string;
 }
 

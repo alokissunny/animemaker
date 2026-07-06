@@ -77,18 +77,28 @@ Notes:
 
 The Final screen can stitch every **approved** scene clip into a single downloadable MP4:
 
-- **Transitions**: Cut, Fade, Dissolve, Wipe Left/Right, Slide Left/Right, Circle Crop, Zoom In — implemented with ffmpeg's `xfade` (video) and `acrossfade` (audio) filters chained across all clips (durations are probed per-clip so the crossfade timing lines up correctly even if Veo's actual output duration differs slightly from what was requested).
+- **Transitions**: Cut, Fade, Dissolve, Wipe Left/Right, Slide Left/Right, Circle Crop, Zoom In — implemented with ffmpeg's `xfade` filter chained across all clips (durations are probed per-clip so the crossfade timing lines up correctly even if Veo's actual output duration differs slightly from what was requested). Every clip is generated silent (see "Videos have no sound" below), so there's no audio track to crossfade.
 - **Format-aware export**: picking Landscape video / Square video / YouTube Shorts / Instagram Reels / TikTok crops+scales the final export to that aspect ratio (16:9 native, 1:1 centered crop, or 9:16 centered crop) — same export format selector that used to be decorative now actually reformats the output.
-- Runs server-side via `ffmpeg-static` (a bundled ffmpeg binary — no system ffmpeg install needed, and it's portable to Render/most Linux hosts). "Cut" + landscape uses a fast stream-copy concat; every other combination re-encodes (libx264/aac), so it takes a bit longer.
+- Runs server-side via `ffmpeg-static` (a bundled ffmpeg binary — no system ffmpeg install needed, and it's portable to Render/most Linux hosts). "Cut" + landscape uses a fast stream-copy concat; every other combination re-encodes (libx264), so it takes a bit longer.
 - Same start-job → poll-status → download pattern as video generation (`POST /api/export/generate`, `POST /api/export/status`, `GET /api/export/file/:id`), all in-memory (no persistence — an export disappears if the server restarts before you download it).
 - **Not included**: burning the background-music selection or captions into the exported file — those two controls on the Final screen remain preview-only for now (the "Download active clip" and per-scene downloads are unaffected).
 
-## Login & saving your project
+## Login & saving your projects
 
 - **Login** checks against a single fixed test credential (no real accounts): **`demo@nova.app` / `showtime123`** by default, shown right on the login screen. Override it via `TEST_LOGIN_EMAIL` / `TEST_LOGIN_PASSWORD` in `server/.env`. The Sign up tab remains a stub, unchanged from before.
-- **Autosave**: once you have at least one character or scene, the app autosaves your whole in-progress episode (characters with portraits, episode config, story, scenes, video references, final settings) to the server a couple seconds after each change — watch for the "Saving…" / "Saved" indicator next to the avatar in the top right.
-- **Resume**: the Dashboard shows a "Resume in-progress episode" banner whenever a saved project exists — clicking it restores everything and jumps back to exactly where you left off (even after closing the tab or restarting the server).
-- This is single-slot (one in-progress episode at a time, matching the app's single continuous flow) and stored as `server/data/project.json` plus `server/data/videos/*.mp4`, not a database — fine for local/dev use. **On most hosting platforms this directory must live on a persistent volume to survive restarts/redeploys** (see Deploying below); Render's default free-tier disk is ephemeral.
+- **Multi-project**: every episode you start (`+ Create New Episode`) is its own project with its own id and its own cast — characters, story, scenes, and videos never bleed between projects. The Dashboard lists every past project (newest first) as a card you can open and resume individually, plus a one-click "Resume" banner for the most recently-updated one.
+- **Autosave**: once the current project has at least one character or scene, the app autosaves it (characters with portraits, episode config, story, scenes, video references, final settings) to the server a couple seconds after each change — watch for the "Saving…" / "Saved" indicator next to the avatar in the top right.
+- **Resume**: opening a project from the Dashboard restores everything for that project and jumps back to exactly where you left off (even after closing the tab or restarting the server).
+- Stored as `server/data/projects/<id>.json` per project, plus `server/data/videos/*.mp4` for the generated clips — not a database, fine for local/dev use. **On most hosting platforms this directory must live on a persistent volume to survive restarts/redeploys** (see Deploying below); Render's default free-tier disk is ephemeral.
+
+## Cast management
+
+- **Delete a character**: the × button on a character's card in "My cast" removes it from the current project's cast (with a confirmation prompt) — use it to drop a character and start fresh before continuing.
+- **Expression clips**: each saved character card has five preset buttons (Happy, Sad, Excited, Surprised, Calm). Clicking one generates a short silent Veo clip of that character in that expression, reusing the character's portrait as the reference image. These are a standalone, reusable asset library per character — click a ready clip to preview it — and are not wired into scene/episode generation.
+
+## Videos have no sound
+
+Every Veo clip — scene videos and character expression clips alike — is generated without audio. The `generateAudio` config flag on the Veo API isn't accepted by every Google backend (the Gemini Developer API rejects it outright for this model), so instead the server always strips the audio track back out with ffmpeg (`stripAudio` in `server/src/services/ffmpegRunner.ts`) right after a clip finishes generating, before it's cached or persisted. Because of this, the Final export's transition crossfades only ever need to blend video (`xfade`) — there's no audio track left to crossfade.
 
 ## Known MVP boundaries
 - **Regenerate scene** (breakdown step): uses a scoped OpenAI call that rewrites just that one scene (not the whole batch), keeping the rest of the story-to-scene continuity intact.
